@@ -1,0 +1,38 @@
+# Godot
+.godot/
+*.import
+export_presets.cfg
+
+# GDExtension binaries
+addons/ss_godot_shader_studio/gdextension/bin/*.so
+addons/ss_godot_shader_studio/gdextension/bin/*.dylib
+addons/ss_godot_shader_studio/gdextension/bin/*.dll
+
+# CMake
+native/build/
+native/CMakeFiles/
+native/CMakeCache.txt
+native/cmake_install.cmake
+native/Makefile
+native/.cmake/
+
+# godot-cpp (managed as submodule, binaries ignored)
+native/thirdparty/godot-cpp/bin/
+native/thirdparty/godot-cpp/gen/
+
+# Compiled output (generated, not source)
+**/*.generated.gdshader
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Release artifacts
+dist/
+*.zip
