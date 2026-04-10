@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3 uid="uid://c40abip76swdg"]
+
+[ext_resource type="Script" uid="uid://bccohdecotxrp" path="res://addons/ss_godot_shader_studio/editor/node_search_popup.gd" id="1_6dgqn"]
+
+[node name="NodeSearchPopup" type="PopupPanel"]
+oversampling_override = 1.0
+visible = true
+script = ExtResource("1_6dgqn")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LineEdit" type="LineEdit" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ItemList" type="ItemList" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
