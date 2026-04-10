@@ -13,15 +13,14 @@
 │  - Toolbar and commands                     │
 │  - Asset integration (import plugin)        │
 ├─────────────────────────────────────────────┤
-│ GDExtension Native Layer (C++)              │
-│  - Graph core (document, node, edge)        │
+│ Core Layer (GDScript)                       │
+│  - Graph model (document, node, edge)       │
 │  - Type system                              │
-│  - Node registry                            │
+│  - Node registry (Engine singleton)         │
 │  - Validation engine                        │
 │  - IR builder                               │
 │  - Compiler + emit backends                 │
 │  - Serializer                               │
-│  - Preview services                         │
 ├─────────────────────────────────────────────┤
 │ Output artifacts                            │
 │  - .gshadergraph  (source, version-control) │
@@ -32,43 +31,52 @@
 
 ## Core principle
 
-**All critical logic lives in C++ (native layer).**
+**All critical logic lives in GDScript (`addons/ss_godot_shader_studio/core/`).**
 
-The editor plugin only orchestrates user experience — it calls into the native layer for everything that matters: validation, compilation, serialization, type checking, registry queries.
+The editor plugin only orchestrates user experience — it calls into the core layer for everything that matters: validation, compilation, serialization, type checking, registry queries.
 
-This means:
-- The compiler can run headless (CI, command-line tools)
-- Unit tests do not require the Godot editor
-- The native layer is stable and versioned independently
-- The editor can be replaced or extended without touching core logic
+Because this is an editor tool (not a runtime library), pure GDScript is the right choice:
+- No compilation step — Godot loads `.gd` files directly
+- Easy to contribute to — no toolchain to set up
+- Fully extensible — third-party addons can register node definitions in GDScript
+- Readable and maintainable for everyone familiar with Godot
 
 ## Module boundaries
 
-### `shader_graph_core` (graph/)
+### `core/graph/`
 Owns the document model: nodes, ports, edges, IDs. No compilation logic. No UI state.
+- `ShaderGraphDocument` — root resource
+- `ShaderGraphNodeInstance` — node in a document
+- `ShaderGraphEdge` — connection between ports
 
-### `shader_graph_types` (types/)
+### `core/types/`
 Owns the type enum and all compatibility/cast rules. No node-specific logic.
+- `SGSTypes` — enum constants: ShaderType, CastType, stage/domain flags
+- `TypeSystem` — static methods: `are_compatible()`, `get_cast_type()`, `type_to_glsl()`, etc.
 
-### `shader_graph_registry` (registry/)
+### `core/registry/`
 Owns the catalog of node definitions. Does not know about document instances.
+- `ShaderNodeDefinition` — reusable node type (ports as `Array[Dictionary]`)
+- `NodeRegistry` — registered as Engine singleton `"NodeRegistry"` at plugin load
+- `StdlibRegistration` — registers all built-in nodes (30+) at startup
 
-### `shader_graph_validation` (validation/)
+### `core/validation/`
 Reads a document + registry, produces a list of issues. Does not modify the document.
+- `ValidationEngine` — 5 passes: structural, typing, stage, cycle, outputs
 
-### `shader_graph_ir` (ir/)
+### `core/ir/`
 Transforms a validated document into an ordered, typed IR. No GLSL emission here.
+- `IRBuilder` — static `build(doc, registry) -> Dictionary` (Kahn's topological sort)
 
-### `shader_graph_compiler` (compiler/)
-Drives the full pipeline: validation → IR → optimization passes → backend emit.
+### `core/compiler/`
+Drives the full pipeline: validation → IR → backend emit.
+- `ShaderGraphCompiler` — `compile_gd(doc) -> Dictionary`
 
-### `shader_graph_serializer` (serializer/)
-Saves and loads `.gshadergraph` and `.gssubgraph`. Owns format versioning and migration.
+### `core/serializer/`
+Saves and loads `.gshadergraph`. Owns format versioning and migration.
+- `GraphSerializer` — `save(doc, path)`, `load(path) -> ShaderGraphDocument`
 
-### `shader_graph_preview` (preview/)
-Compiles sub-shaders for per-node preview thumbnails and the full preview viewport.
-
-### `shader_graph_stdlib` (registry/stdlib/)
+### `core/registry/stdlib_registration.gd`
 Registers all built-in node definitions into the registry at startup.
 
 ## Compiler pipeline
@@ -80,15 +88,13 @@ ShaderGraphDocument
        ↓
   Pass 2: type inference + coercion
        ↓
-  Pass 3: stage validation        (vertex-only, fragment-only, varyings)
+  Pass 3: stage validation        (vertex-only, fragment-only)
        ↓
   Pass 4: cycle detection
        ↓
-  IRBuilder: topological sort → IRGraph
+  IRBuilder: topological sort → IRGraph (Dictionary)
        ↓
-  Pass 5: dead node elimination
-       ↓
-  EmitBackend (spatial / canvas_item / particles / sky / fog / fullscreen)
+  EmitBackend (selected by shader domain)
        ↓
   .gdshader
 ```
@@ -100,14 +106,8 @@ ShaderGraphDocument
 - Both files should be committed so the shader works without running the tool.
 - The compiler output is **deterministic**: same input always produces the same output.
 
-## Division of responsibility: what Claude Code generates vs what is created in Godot editor
+## Editor and core responsibilities
 
-| Claude Code generates | Developer creates in Godot editor |
-|----------------------|----------------------------------|
-| All C++ source files | All `.tscn` scene files |
-| All GDScript `.gd` files | Signal connections in the editor |
-| CMakeLists.txt | Exported variable assignments in inspector |
-| `.gdextension` descriptor | Godot project settings and input maps |
-| `plugin.cfg` | |
-| JSON/config files | |
-| Documentation | |
+- The editor layer owns interaction, layout, preview panels, and asset integration.
+- The core layer owns graph validation, serialization, type checking, IR generation, and shader emission.
+- This separation keeps the data model and compiler reusable outside the editor UI itself.

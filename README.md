@@ -1,96 +1,71 @@
 # Godot Shader Studio
 
-Professional visual shader editor for Godot 4, built as a GDExtension native plugin.
-
-> **Status:** Phase A — Foundation (in development)
+Visual shader editor for Godot 4, built as a pure GDScript addon.
 
 ## Overview
 
-Godot Shader Studio is a standalone visual shader authoring platform for Godot 4.4+. It is not a wrapper around Godot's built-in VisualShader — it is an independent system with its own graph model, type system, compiler, and editor UI.
+Godot Shader Studio is a standalone visual shader authoring tool for Godot 4. It is not a wrapper around Godot's built-in VisualShader. The addon ships its own graph model, type system, compiler, serializer, and editor UI.
 
-## Architecture
+All core logic is written in GDScript. No C++, no GDExtension, and no native build step.
 
-| Layer | Technology | Responsibility |
-|-------|-----------|----------------|
-| Native core | C++ 17 + GDExtension | Graph model, type system, compiler, serializer, registry |
-| Editor plugin | GDScript + Godot Controls | UI, docks, canvas, inspector, asset integration |
+## Features
 
-## Shader domains supported (planned)
+- Node-based shader authoring inside the Godot editor
+- Pure GDScript compiler pipeline with deterministic output
+- Saveable graph assets with reusable subgraphs
+- Built-in validation, compiler diagnostics, and preview tooling
+- Support for multiple Godot shader domains
 
-- `spatial` ✓ (Phase B)
-- `canvas_item` (Phase D)
-- `particles` (Phase D)
-- `sky` (Phase D)
-- `fog` (Phase D)
-- `postprocess / fullscreen` (Phase D)
+## Supported shader domains
+
+| Domain | Status |
+|--------|--------|
+| `spatial` | ✅ |
+| `canvas_item` | ✅ |
+| `particles` | ✅ |
+| `sky` | ✅ |
+| `fog` | ✅ |
+| `fullscreen / postprocess` | ✅ |
 
 ## File formats
 
 | Extension | Description |
 |-----------|-------------|
-| `.gshadergraph` | Visual shader source — the file you author |
-| `.gssubgraph` | Reusable subgraph component |
-| `.generated.gdshader` | Compiled output — do not edit manually |
+| `.gshadergraph` | Visual shader source file |
+| `.gssubgraph` | Reusable subgraph asset |
+| `.generated.gdshader` | Generated shader output |
 
-## Repository structure
+## Installation
 
-```
-ss-godot-shader-studio/
-├── addons/ss_godot_shader_studio/   ← Godot addon (install this in your project)
-│   ├── plugin.cfg
-│   ├── plugin.gd
-│   ├── scripts/                     ← GDScript editor logic
-│   ├── scenes/                      ← Editor UI scenes (created in Godot editor)
-│   ├── icons/
-│   └── gdextension/                 ← Native binaries + .gdextension descriptor
-├── native/                          ← C++ GDExtension source
-│   ├── CMakeLists.txt
-│   ├── thirdparty/godot-cpp/
-│   └── src/
-│       ├── core/                    ← Entry point, class registration
-│       ├── graph/                   ← Document, node instance, edge
-│       ├── types/                   ← Type system, port definitions
-│       ├── registry/                ← Node definitions, stdlib
-│       ├── validation/              ← Validation engine and results
-│       ├── ir/                      ← Intermediate representation
-│       ├── compiler/                ← Graph → IR → .gdshader
-│       └── serializer/              ← Save/load .gshadergraph
-├── examples/
-│   ├── sandbox-3d/
-│   └── sample-graphs/
-├── docs/
-│   ├── architecture/
-│   ├── compiler/
-│   ├── graph-format/
-│   └── node-authoring/
-└── tools/
-```
-
-## Building
-
-```bash
-# Clone with submodules
-git clone --recurse-submodules https://github.com/slice-soft/ss-godot-shader-studio
-
-# Build native extension
-cd native
-cmake -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build
-
-# Copy binary to addon
-cp build/libss_godot_shader_studio.* addons/ss_godot_shader_studio/gdextension/bin/
-```
+1. Copy `addons/ss_godot_shader_studio/` into your project's `addons/` folder.
+2. Open Godot and enable the plugin in **Project Settings -> Plugins**.
+3. Use the **Shader Studio** editor tab to create and edit shader graphs.
 
 ## Requirements
 
-- Godot 4.4+
-- CMake 3.22+
-- C++17 compatible compiler
+- Godot 4.5+
+
+## Documentation
+
+- [Architecture overview](docs/architecture/overview.md)
+- [Compiler pipeline](docs/compiler/pipeline.md)
+- [Graph format specification](docs/graph-format/gshadergraph-spec.md)
+- [Node definition specification](docs/node-authoring/node-definition-spec.md)
+- [Roadmap](ROADMAP.md)
+
+## Development
+
+Run the editor once to refresh the script class cache, then execute the test runner:
+
+```bash
+godot --headless --editor --path . --quit
+godot --headless --path . --script test/runner.gd
+```
+
+> The first command regenerates `.godot/global_script_class_cache.cfg`. It is required after adding any new file that declares a `class_name`. Skip it and the runner will fail with `"Could not find type"` errors.
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT. See [LICENSE](LICENSE).
 
----
-
-*Part of the [SliceSoft](https://slicesoft.dev) / Gameforge ecosystem.*
+*Part of the [SliceSoft](https://slicesoft.dev) ecosystem.*

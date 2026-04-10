@@ -153,14 +153,14 @@ The emitter substitutes `{a}`, `{b}`, `{result}` with the assigned variable name
 
 ## CompileResult
 
-```cpp
-struct CompileResult {
-    bool success;
-    String shader_code;       // empty if success == false
-    Array issues;             // ValidationIssue[]
-    String compiler_version;
-    String source_uuid;
-};
+`ShaderGraphCompiler.compile_gd(doc)` returns a Dictionary:
+
+```gdscript
+{
+    "success":     bool,    # false if any ERROR-level issue
+    "shader_code": String,  # empty if success == false
+    "issues":      Array,   # [{severity, node_id, port_id, message, code}]
+}
 ```
 
 Consumers should always check `success` before using `shader_code`.
