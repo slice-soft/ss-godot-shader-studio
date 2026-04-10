@@ -1,6 +1,8 @@
 @tool
 extends GraphEdit
 
+const SubgraphContract = preload("res://addons/ss_godot_shader_studio/core/graph/subgraph_contract.gd")
+
 signal node_selected_in_canvas(node_instance: ShaderGraphNodeInstance)
 signal frame_selected_in_canvas(frame_data: Dictionary, frame_widget: GraphFrame)
 signal graph_changed
@@ -102,8 +104,10 @@ func load_document(doc: ShaderGraphDocument) -> void:
 		_create_frame_widget(frame_data)
 
 	for node_inst in doc.get_all_nodes():
+		apply_port_defaults(node_inst as ShaderGraphNodeInstance)
 		_create_node_widget(node_inst as ShaderGraphNodeInstance)
 
+	_remove_invalid_edges()
 	for edge in doc.get_all_edges():
 		_connect_edge_visual(edge as ShaderGraphEdge)
 
@@ -146,21 +150,41 @@ func _create_node_widget(node_inst: ShaderGraphNodeInstance) -> void:
 	widget.name = node_inst.get_id()
 	widget.position_offset = node_inst.get_position()
 	add_child(widget)
-	widget.setup(node_inst, _get_port_info(node_inst.get_definition_id()))
+	widget.setup(node_inst, _get_port_info_for_node(node_inst))
 
 
-func _get_port_info(def_id: String) -> Dictionary:
-	var registry = Engine.get_singleton("NodeRegistry")
-	if registry == null:
-		return {"inputs": [], "outputs": []}
-	var def = registry.get_definition(def_id)
-	if def == null:
-		return {"inputs": [], "outputs": []}
+func refresh_node_widget(node_inst: ShaderGraphNodeInstance) -> void:
+	if node_inst == null:
+		return
+	var widget := get_node_or_null(NodePath(node_inst.get_id()))
+	if widget == null:
+		_create_node_widget(node_inst)
+		return
+	widget.setup(node_inst, _get_port_info_for_node(node_inst))
+	widget.position_offset = node_inst.get_position()
+
+
+func refresh_dynamic_ports() -> Dictionary:
+	if _document == null:
+		return {"removed_edges": 0}
+
+	for entry in _document.get_all_nodes():
+		var node_inst := entry as ShaderGraphNodeInstance
+		if node_inst == null or not _is_dynamic_port_node(node_inst):
+			continue
+		refresh_node_widget(node_inst)
+
+	var removed_edges := _remove_invalid_edges()
+	_rebuild_connections()
+	return {"removed_edges": removed_edges}
+
+
+func _get_port_info_for_node(node_inst: ShaderGraphNodeInstance) -> Dictionary:
 	var inputs: Array = []
 	var outputs: Array = []
-	for port in def.inputs:
+	for port in _effective_input_ports(node_inst):
 		inputs.append(port["name"])
-	for port in def.outputs:
+	for port in _effective_output_ports(node_inst):
 		outputs.append(port["name"])
 	return {"inputs": inputs, "outputs": outputs}
 
@@ -190,29 +214,81 @@ func _def_id_of(node_id: String) -> String:
 
 
 func _output_index(node_id: String, port_id: String) -> int:
-	var registry = Engine.get_singleton("NodeRegistry")
-	if registry == null:
+	var node_inst: ShaderGraphNodeInstance = _document.get_node(node_id) if _document != null else null
+	if node_inst == null:
 		return -1
-	var def = registry.get_definition(_def_id_of(node_id))
-	if def == null:
-		return -1
-	for i in def.outputs.size():
-		if def.outputs[i]["id"] == port_id:
+	var outputs := _effective_output_ports(node_inst)
+	for i in outputs.size():
+		if outputs[i]["id"] == port_id:
 			return i
 	return -1
 
 
 func _input_index(node_id: String, port_id: String) -> int:
-	var registry = Engine.get_singleton("NodeRegistry")
-	if registry == null:
+	var node_inst: ShaderGraphNodeInstance = _document.get_node(node_id) if _document != null else null
+	if node_inst == null:
 		return -1
-	var def = registry.get_definition(_def_id_of(node_id))
-	if def == null:
-		return -1
-	for i in def.inputs.size():
-		if def.inputs[i]["id"] == port_id:
+	var inputs := _effective_input_ports(node_inst)
+	for i in inputs.size():
+		if inputs[i]["id"] == port_id:
 			return i
 	return -1
+
+
+func _effective_input_ports(node_inst: ShaderGraphNodeInstance) -> Array:
+	var registry = Engine.get_singleton("NodeRegistry") as NodeRegistry
+	return SubgraphContract.get_input_ports(_document, node_inst, registry)
+
+
+func _effective_output_ports(node_inst: ShaderGraphNodeInstance) -> Array:
+	var registry = Engine.get_singleton("NodeRegistry") as NodeRegistry
+	return SubgraphContract.get_output_ports(_document, node_inst, registry)
+
+
+func _has_input_port(node_id: String, port_id: String) -> bool:
+	var node_inst: ShaderGraphNodeInstance = _document.get_node(node_id) if _document != null else null
+	if node_inst == null:
+		return false
+	for port in _effective_input_ports(node_inst):
+		if port["id"] == port_id:
+			return true
+	return false
+
+
+func _has_output_port(node_id: String, port_id: String) -> bool:
+	var node_inst: ShaderGraphNodeInstance = _document.get_node(node_id) if _document != null else null
+	if node_inst == null:
+		return false
+	for port in _effective_output_ports(node_inst):
+		if port["id"] == port_id:
+			return true
+	return false
+
+
+func _remove_invalid_edges() -> int:
+	if _document == null:
+		return 0
+
+	var removed := 0
+	var edges := _document.get_all_edges()
+	for i in range(edges.size() - 1, -1, -1):
+		var edge := edges[i] as ShaderGraphEdge
+		if edge == null:
+			continue
+		if _has_output_port(edge.get_from_node_id(), edge.get_from_port_id()) \
+				and _has_input_port(edge.get_to_node_id(), edge.get_to_port_id()):
+			continue
+		_document.remove_edge(edge.get_id())
+		removed += 1
+	return removed
+
+
+func _is_dynamic_port_node(node_inst: ShaderGraphNodeInstance) -> bool:
+	if node_inst == null:
+		return false
+	return node_inst.get_definition_id() == "utility/subgraph" \
+			or node_inst.get_definition_id() == "subgraph/input" \
+			or node_inst.get_definition_id() == "subgraph/output"
 
 
 # ---------------------------------------------------------------------------
@@ -234,6 +310,7 @@ func _cmd_add_node(node_id: String, def_id: String, pos: Vector2,
 	node_inst.set_title(title)
 	for key in props:
 		node_inst.set_property(key, props[key])
+	apply_port_defaults(node_inst)
 	_create_node_widget(node_inst)
 	graph_changed.emit()
 
@@ -285,17 +362,16 @@ func _on_connection_request(from_node: StringName, from_port: int,
 		to_node: StringName, to_port: int) -> void:
 	if _document == null:
 		return
-	var registry = Engine.get_singleton("NodeRegistry")
-	if registry == null:
+	var from_inst := _document.get_node(String(from_node))
+	var to_inst := _document.get_node(String(to_node))
+	if from_inst == null or to_inst == null:
 		return
-	var from_def = registry.get_definition(_def_id_of(from_node))
-	var to_def   = registry.get_definition(_def_id_of(to_node))
-	if from_def == null or to_def == null:
+	var outputs := _effective_output_ports(from_inst)
+	var inputs := _effective_input_ports(to_inst)
+	if from_port >= outputs.size() or to_port >= inputs.size():
 		return
-	if from_port >= from_def.outputs.size() or to_port >= to_def.inputs.size():
-		return
-	var from_port_id: String = from_def.outputs[from_port]["id"]
-	var to_port_id: String   = to_def.inputs[to_port]["id"]
+	var from_port_id: String = outputs[from_port]["id"]
+	var to_port_id: String   = inputs[to_port]["id"]
 	var edge_id := _document.add_edge(from_node, from_port_id, to_node, to_port_id)
 	if edge_id.is_empty():
 		return
@@ -314,17 +390,16 @@ func _on_disconnection_request(from_node: StringName, from_port: int,
 		to_node: StringName, to_port: int) -> void:
 	if _document == null:
 		return
-	var registry = Engine.get_singleton("NodeRegistry")
-	if registry == null:
+	var from_inst := _document.get_node(String(from_node))
+	var to_inst := _document.get_node(String(to_node))
+	if from_inst == null or to_inst == null:
 		return
-	var from_def = registry.get_definition(_def_id_of(from_node))
-	var to_def   = registry.get_definition(_def_id_of(to_node))
-	if from_def == null or to_def == null:
+	var outputs := _effective_output_ports(from_inst)
+	var inputs := _effective_input_ports(to_inst)
+	if from_port >= outputs.size() or to_port >= inputs.size():
 		return
-	if from_port >= from_def.outputs.size() or to_port >= to_def.inputs.size():
-		return
-	var from_port_id: String = from_def.outputs[from_port]["id"]
-	var to_port_id: String   = to_def.inputs[to_port]["id"]
+	var from_port_id: String = outputs[from_port]["id"]
+	var to_port_id: String   = inputs[to_port]["id"]
 	for edge in _document.get_all_edges():
 		var e := edge as ShaderGraphEdge
 		if (e.get_from_node_id() == from_node and e.get_from_port_id() == from_port_id
@@ -697,6 +772,7 @@ func _spawn_nodes(nodes: Array, edges: Array) -> void:
 		inst.set_title(nd["title"])
 		for key in nd["props"]:
 			inst.set_property(key, nd["props"][key])
+		apply_port_defaults(inst)
 		_create_node_widget(inst)
 		new_ids.append(node_id)
 	for ed in edges:
@@ -733,14 +809,27 @@ func apply_port_defaults(node_inst: ShaderGraphNodeInstance) -> void:
 	if def_id == "subgraph/input":
 		if node_inst.get_property("input_name") == null:
 			node_inst.set_property("input_name", "a")
+		node_inst.set_property("input_type", SubgraphContract.input_port_type_name(node_inst))
+		node_inst.set_property("port_id", "in_%s" % node_inst.get_id())
 	if def_id == "subgraph/output":
 		if node_inst.get_property("output_name") == null:
 			node_inst.set_property("output_name", "out1")
-	# Parameter nodes: seed with a unique name.
+		node_inst.set_property("output_type", SubgraphContract.output_port_type_name(node_inst))
+		node_inst.set_property("port_id", "out_%s" % node_inst.get_id())
+	# Parameter nodes: seed with a unique name and a type-appropriate default value.
 	if def_id.begins_with("parameter/"):
 		if node_inst.get_property("param_name") == null or \
 				str(node_inst.get_property("param_name")).is_empty():
 			node_inst.set_property("param_name", "my_param")
+		if node_inst.get_property("default_value") == null:
+			var _dv_default: String
+			match def_id:
+				"parameter/float":    _dv_default = "0.0"
+				"parameter/vec4":     _dv_default = "vec4(0.0, 0.0, 0.0, 1.0)"
+				"parameter/color":    _dv_default = "vec4(1.0, 1.0, 1.0, 1.0)"
+				_:                    _dv_default = ""
+			if not _dv_default.is_empty():
+				node_inst.set_property("default_value", _dv_default)
 
 
 func _on_node_chosen(def_id: String, graph_pos: Vector2) -> void:

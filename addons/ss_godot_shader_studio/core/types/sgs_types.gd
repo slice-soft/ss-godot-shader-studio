@@ -34,6 +34,7 @@ enum CastType {
 	IMPLICIT_TRUNCATE = 2,  # vecN → vecM where M < N (lossy)
 	IMPLICIT_SEMANTIC = 3,  # semantic → its base type
 	INCOMPATIBLE      = 4,
+	IMPLICIT_VEC3_TO_COLOR = 5,  # vec3 RGB → COLOR (vec4 with alpha=1.0)
 }
 
 # Stage support bitfield flags

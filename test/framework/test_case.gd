@@ -10,22 +10,22 @@ var _current_test: String = ""
 
 
 # Called once before the entire suite.
-func before_all() -> void:
+func before_all():
 	pass
 
 
 # Called once after the entire suite.
-func after_all() -> void:
+func after_all():
 	pass
 
 
 # Called before each test_ method.
-func setup() -> void:
+func setup():
 	pass
 
 
 # Called after each test_ method.
-func teardown() -> void:
+func teardown():
 	pass
 
 
@@ -33,7 +33,7 @@ func run_all() -> void:
 	_pass_count = 0
 	_fail_count = 0
 
-	before_all()
+	await before_all()
 
 	var methods: Array[String] = []
 	for m in get_method_list():
@@ -44,11 +44,11 @@ func run_all() -> void:
 
 	for method_name in methods:
 		_current_test = method_name
-		setup()
-		call(method_name)
-		teardown()
+		await setup()
+		await call(method_name)
+		await teardown()
 
-	after_all()
+	await after_all()
 
 
 func get_pass_count() -> int:

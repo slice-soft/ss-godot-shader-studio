@@ -28,6 +28,11 @@ func test_set_shader_domain() -> void:
 	assert_eq(doc.get_shader_domain(), "spatial")
 
 
+func test_generated_shader_dir_round_trip() -> void:
+	doc.set_generated_shader_dir("res://shaders/runtime")
+	assert_eq(doc.get_generated_shader_dir(), "res://shaders/runtime")
+
+
 # ---- add_node / get_node / get_all_nodes ----
 
 func test_add_node_returns_id() -> void:

@@ -109,6 +109,10 @@ static func get_cast_type(from: int, to: int) -> int:
 		if t2 in [SGSTypes.ShaderType.VEC2, SGSTypes.ShaderType.VEC3, SGSTypes.ShaderType.VEC4]:
 			return SGSTypes.CastType.IMPLICIT_SPLAT
 
+	# vec3 → COLOR (vec4 semantic): RGB promoted to RGBA with alpha=1.0
+	if f == SGSTypes.ShaderType.VEC3 and to == SGSTypes.ShaderType.COLOR:
+		return SGSTypes.CastType.IMPLICIT_VEC3_TO_COLOR
+
 	# vecN → vecM truncation (N > M)
 	var fc := get_component_count(f)
 	var tc := get_component_count(t2)

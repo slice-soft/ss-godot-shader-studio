@@ -1,6 +1,10 @@
 @tool
 extends PanelContainer
 
+const SubgraphContract = preload("res://addons/ss_godot_shader_studio/core/graph/subgraph_contract.gd")
+
+signal property_edited(node_instance: ShaderGraphNodeInstance, key: String, value: Variant)
+
 var _current_node: ShaderGraphNodeInstance = null
 
 @onready var _title_label: Label         = $VBoxContainer/NodeTitle
@@ -65,6 +69,10 @@ func _add_property_row(node_inst: ShaderGraphNodeInstance, key: String, value: V
 		_add_subgraph_path_row(node_inst, key, str(value) if value != null else "")
 		return
 
+	if key == "input_type" or key == "output_type":
+		_add_type_picker_row(node_inst, key, str(value) if value != null else "")
+		return
+
 	# Default: single-line LineEdit
 	var row := HBoxContainer.new()
 
@@ -78,10 +86,10 @@ func _add_property_row(node_inst: ShaderGraphNodeInstance, key: String, value: V
 	edit.text = str(value)
 	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit.text_submitted.connect(func(text: String) -> void:
-		node_inst.set_property(key, text)
+		_update_node_property(node_inst, key, text)
 	)
 	edit.focus_exited.connect(func() -> void:
-		node_inst.set_property(key, edit.text)
+		_update_node_property(node_inst, key, edit.text)
 	)
 	row.add_child(edit)
 
@@ -109,7 +117,7 @@ func _add_body_editor(node_inst: ShaderGraphNodeInstance, key: String, value: St
 	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	edit.text_changed.connect(func() -> void:
-		node_inst.set_property(key, edit.text)
+		_update_node_property(node_inst, key, edit.text)
 	)
 	vbox.add_child(edit)
 
@@ -133,10 +141,10 @@ func _add_subgraph_path_row(node_inst: ShaderGraphNodeInstance, key: String, val
 	path_edit.placeholder_text = "res://...gssubgraph"
 	path_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	path_edit.text_submitted.connect(func(text: String) -> void:
-		node_inst.set_property(key, text)
+		_update_node_property(node_inst, key, text)
 	)
 	path_edit.focus_exited.connect(func() -> void:
-		node_inst.set_property(key, path_edit.text)
+		_update_node_property(node_inst, key, path_edit.text)
 	)
 	hbox.add_child(path_edit)
 
@@ -150,6 +158,32 @@ func _add_subgraph_path_row(node_inst: ShaderGraphNodeInstance, key: String, val
 
 	vbox.add_child(hbox)
 	_props_container.add_child(vbox)
+
+
+func _add_type_picker_row(node_inst: ShaderGraphNodeInstance, key: String, value: String) -> void:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var label := Label.new()
+	label.text = key + ":"
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.clip_text = true
+	row.add_child(label)
+
+	var picker := OptionButton.new()
+	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var types := ["float", "vec2", "vec3", "vec4", "color", "sampler2D"]
+	var normalized := SubgraphContract.normalize_type_name(value)
+	for i in types.size():
+		picker.add_item(types[i], i)
+		if types[i] == normalized:
+			picker.selected = i
+	picker.item_selected.connect(func(index: int) -> void:
+		_update_node_property(node_inst, key, types[index])
+	)
+	row.add_child(picker)
+
+	_props_container.add_child(row)
 
 
 func _open_subgraph_dialog(node_inst: ShaderGraphNodeInstance,
@@ -169,5 +203,13 @@ func _open_subgraph_dialog(node_inst: ShaderGraphNodeInstance,
 
 func _on_subgraph_file_selected(path: String, node_inst: ShaderGraphNodeInstance,
 		key: String, path_edit: LineEdit) -> void:
-	node_inst.set_property(key, path)
+	_update_node_property(node_inst, key, path)
 	path_edit.text = path
+
+
+func _update_node_property(
+		node_inst: ShaderGraphNodeInstance,
+		key: String,
+		value: Variant) -> void:
+	node_inst.set_property(key, value)
+	property_edited.emit(node_inst, key, value)

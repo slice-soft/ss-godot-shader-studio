@@ -10,6 +10,11 @@ func before_all() -> void:
 	StdlibRegistration.register_all(registry)
 
 
+func after_all() -> void:
+	registry.free()
+
+
+
 # ---- Helper: minimal spatial graph ----
 
 func _make_spatial_graph() -> ShaderGraphDocument:

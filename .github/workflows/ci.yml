@@ -18,4 +18,4 @@ jobs:
     uses: slice-soft/ss-pipeline/.github/workflows/ci-godot.yml@v0
     with:
       godot-version: "4.5"
-      test-script: test/runner.gd
+      test-command: godot --headless --editor --path . --script test/runner.gd

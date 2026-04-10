@@ -11,6 +11,10 @@ func before_all() -> void:
 	StdlibRegistration.register_all(registry)
 
 
+func after_all() -> void:
+	registry.free()
+
+
 func setup() -> void:
 	engine = ValidationEngine.new()
 

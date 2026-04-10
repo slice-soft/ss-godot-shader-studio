@@ -10,6 +10,7 @@ extends SubViewportContainer
 # We use a SubViewportContainer (Control) so .visible works correctly.
 var _container_2d: SubViewportContainer = null
 var _viewport_2d: SubViewport           = null
+var _bg_rect: TextureRect               = null  # 3D scene texture so hint_screen_texture has content
 var _color_rect: ColorRect              = null
 
 # Channel / UV visualization modes for the 3D preview
@@ -40,6 +41,13 @@ func _ready() -> void:
 	_viewport_2d.transparent_bg = true
 	_container_2d.add_child(_viewport_2d)
 
+	# Background TextureRect showing the 3D scene so hint_screen_texture samples the capsule.
+	_bg_rect = TextureRect.new()
+	_bg_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_bg_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_bg_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_viewport_2d.add_child(_bg_rect)
+
 	_color_rect = ColorRect.new()
 	_color_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_viewport_2d.add_child(_color_rect)
@@ -61,15 +69,26 @@ func _apply_with_mode(shader_code: String, mode: PreviewMode) -> void:
 		_mesh.material_override = null
 		if _color_rect:
 			_color_rect.material = null
+		_node3d.visible = true
+		_container_2d.visible = false
 		return
 
 	var is_2d := (shader_code.contains("shader_type canvas_item")
 			or shader_code.contains("shader_type particles"))
+	var is_unsupported := (shader_code.contains("shader_type sky")
+			or shader_code.contains("shader_type fog"))
+
+	if is_unsupported:
+		# Sky and fog require a full scene setup — skip preview silently.
+		_node3d.visible = false
+		_container_2d.visible = false
+		return
 
 	if is_2d:
-		# Hide 3D content (Node3D.visible is valid), show 2D container
-		_node3d.visible = false
+		# Keep 3D scene rendering — its texture becomes the background for hint_screen_texture.
+		_node3d.visible = true
 		_container_2d.visible = true
+		_bg_rect.texture = ($SubViewport as SubViewport).get_texture()
 		var shader := Shader.new()
 		shader.code = shader_code
 		var mat := ShaderMaterial.new()

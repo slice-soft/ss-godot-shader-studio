@@ -3,10 +3,15 @@
 ## Each issue: {"severity": int, "node_id": String, "port_id": String, "message": String, "code": String}
 class_name ValidationEngine
 
+const SubgraphContract = preload("res://addons/ss_godot_shader_studio/core/graph/subgraph_contract.gd")
+
 
 func validate(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionary:
 	var issues: Array = []
 	_pass_structural(doc, registry, issues)
+	if _has_errors(issues):
+		return {"success": false, "issues": issues}
+	_pass_subgraphs(doc, issues)
 	if _has_errors(issues):
 		return {"success": false, "issues": issues}
 	_pass_typing(doc, registry, issues)
@@ -29,6 +34,34 @@ func _issue(severity: int, node_id: String, port_id: String,
 		message: String, code: String) -> Dictionary:
 	return {"severity": severity, "node_id": node_id, "port_id": port_id,
 			"message": message, "code": code}
+
+
+func _effective_inputs(
+		doc: ShaderGraphDocument,
+		node: ShaderGraphNodeInstance,
+		registry: NodeRegistry) -> Array:
+	return SubgraphContract.get_input_ports(doc, node, registry)
+
+
+func _effective_outputs(
+		doc: ShaderGraphDocument,
+		node: ShaderGraphNodeInstance,
+		registry: NodeRegistry) -> Array:
+	return SubgraphContract.get_output_ports(doc, node, registry)
+
+
+func _port_ids(ports: Array) -> Array:
+	var ids := []
+	for port in ports:
+		ids.append(port["id"])
+	return ids
+
+
+func _port_type(ports: Array, port_id: String) -> int:
+	for port in ports:
+		if port["id"] == port_id:
+			return port["type"]
+	return SGSTypes.ShaderType.VOID
 
 
 # ---- Pass 1: Structural ----
@@ -65,14 +98,84 @@ func _pass_structural(doc: ShaderGraphDocument, registry: NodeRegistry, issues: 
 
 		if _has_errors(issues):
 			continue
-		var from_def := registry.get_definition(doc.get_node(edge.from_node_id).definition_id)
-		var to_def   := registry.get_definition(doc.get_node(edge.to_node_id).definition_id)
-		if from_def and edge.from_port_id not in from_def.get_output_ids():
+		var from_node := doc.get_node(edge.from_node_id)
+		var to_node := doc.get_node(edge.to_node_id)
+		var from_ports := _effective_outputs(doc, from_node, registry)
+		var to_ports := _effective_inputs(doc, to_node, registry)
+		if edge.from_port_id not in _port_ids(from_ports):
 			issues.append(_issue(2, edge.from_node_id, edge.from_port_id,
 				"Edge references unknown output port '%s'" % edge.from_port_id, "E008"))
-		if to_def and edge.to_port_id not in to_def.get_input_ids():
+		if edge.to_port_id not in _port_ids(to_ports):
 			issues.append(_issue(2, edge.to_node_id, edge.to_port_id,
 				"Edge references unknown input port '%s'" % edge.to_port_id, "E009"))
+
+
+func _pass_subgraphs(doc: ShaderGraphDocument, issues: Array) -> void:
+	var seen_inputs: Dictionary = {}
+	var seen_outputs: Dictionary = {}
+
+	for entry in doc.get_all_nodes():
+		var node := entry as ShaderGraphNodeInstance
+		if node == null:
+			continue
+
+		if node.definition_id == "utility/subgraph":
+			var sg_path := str(node.get_property("subgraph_path")) \
+					if node.get_property("subgraph_path") != null else ""
+			if sg_path.is_empty():
+				issues.append(_issue(2, node.id, "subgraph_path",
+					"Subgraph node requires a .gssubgraph source path.", "E040"))
+				continue
+			var contract := SubgraphContract.load_contract_from_path(sg_path)
+			if contract.get("valid", false):
+				continue
+			match contract.get("error", ""):
+				"missing_file":
+					issues.append(_issue(2, node.id, "subgraph_path",
+						"Subgraph file was not found: %s" % sg_path, "E041"))
+				"wrong_domain":
+					issues.append(_issue(2, node.id, "subgraph_path",
+						"Referenced file is not a subgraph: %s" % contract.get("resolved_path", sg_path), "E042"))
+				_:
+					issues.append(_issue(2, node.id, "subgraph_path",
+						"Subgraph file could not be loaded: %s" % sg_path, "E043"))
+
+		if doc.get_shader_domain() != "subgraph":
+			continue
+
+		if node.definition_id == "subgraph/input":
+			var input_name := str(node.get_property("input_name")) if node.get_property("input_name") != null else ""
+			input_name = input_name.strip_edges()
+			if input_name.is_empty():
+				issues.append(_issue(2, node.id, "input_name",
+					"Subgraph input nodes need a visible input_name.", "E044"))
+			elif seen_inputs.has(input_name):
+				issues.append(_issue(2, node.id, "input_name",
+					"Duplicate subgraph input name '%s'." % input_name, "E045"))
+			else:
+				seen_inputs[input_name] = true
+
+			var raw_input_type := str(node.get_property("input_type")) if node.get_property("input_type") != null else ""
+			if not SubgraphContract.raw_type_name_is_supported(raw_input_type):
+				issues.append(_issue(2, node.id, "input_type",
+					"Unsupported subgraph input type '%s'." % raw_input_type, "E046"))
+
+		elif node.definition_id == "subgraph/output":
+			var output_name := str(node.get_property("output_name")) if node.get_property("output_name") != null else ""
+			output_name = output_name.strip_edges()
+			if output_name.is_empty():
+				issues.append(_issue(2, node.id, "output_name",
+					"Subgraph output nodes need a visible output_name.", "E047"))
+			elif seen_outputs.has(output_name):
+				issues.append(_issue(2, node.id, "output_name",
+					"Duplicate subgraph output name '%s'." % output_name, "E048"))
+			else:
+				seen_outputs[output_name] = true
+
+			var raw_output_type := str(node.get_property("output_type")) if node.get_property("output_type") != null else ""
+			if not SubgraphContract.raw_type_name_is_supported(raw_output_type):
+				issues.append(_issue(2, node.id, "output_type",
+					"Unsupported subgraph output type '%s'." % raw_output_type, "E049"))
 
 
 # ---- Pass 2: Typing ----
@@ -88,12 +191,12 @@ func _pass_typing(doc: ShaderGraphDocument, registry: NodeRegistry, issues: Arra
 		if from_node.definition_id == "utility/reroute" \
 				or to_node.definition_id == "utility/reroute":
 			continue
-		var from_def := registry.get_definition(from_node.definition_id)
-		var to_def   := registry.get_definition(to_node.definition_id)
-		if from_def == null or to_def == null:
+		var from_ports := _effective_outputs(doc, from_node, registry)
+		var to_ports := _effective_inputs(doc, to_node, registry)
+		var from_type := _port_type(from_ports, edge.from_port_id)
+		var to_type   := _port_type(to_ports, edge.to_port_id)
+		if from_type == SGSTypes.ShaderType.VOID or to_type == SGSTypes.ShaderType.VOID:
 			continue
-		var from_type := from_def.get_output_type(edge.from_port_id)
-		var to_type   := to_def.get_input_type(edge.to_port_id)
 		var cast := TypeSystem.get_cast_type(from_type, to_type)
 		if cast == SGSTypes.CastType.INCOMPATIBLE:
 			issues.append(_issue(2, edge.to_node_id, edge.to_port_id,

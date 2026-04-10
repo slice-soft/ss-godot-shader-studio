@@ -19,9 +19,58 @@
 ## IRValue: {"var_name": String, "type": int}
 class_name IRBuilder
 
+const SubgraphContract = preload("res://addons/ss_godot_shader_studio/core/graph/subgraph_contract.gd")
+
 ## Shared counter used across build() and subgraph expansions so var names
 ## never collide even when multiple subgraphs are embedded.
 static var _global_counter: int = 0
+
+
+static func _effective_inputs(
+		doc: ShaderGraphDocument,
+		node: ShaderGraphNodeInstance,
+		registry: NodeRegistry) -> Array:
+	return SubgraphContract.get_input_ports(doc, node, registry)
+
+
+static func _effective_outputs(
+		doc: ShaderGraphDocument,
+		node: ShaderGraphNodeInstance,
+		registry: NodeRegistry) -> Array:
+	return SubgraphContract.get_output_ports(doc, node, registry)
+
+
+static func _coerce_value_to_type(resolved_input: Dictionary, target_type: int) -> Dictionary:
+	var resolved := resolved_input.duplicate()
+	var cast := TypeSystem.get_cast_type(resolved["type"], target_type)
+	if cast == SGSTypes.CastType.IMPLICIT_SPLAT:
+		var glsl_type := TypeSystem.type_to_glsl(target_type)
+		resolved["var_name"] = "%s(%s)" % [glsl_type, resolved["var_name"]]
+		resolved["type"] = target_type
+	elif cast == SGSTypes.CastType.IMPLICIT_TRUNCATE:
+		var tc := TypeSystem.get_component_count(target_type)
+		var swiz := [".x", ".xy", ".xyz", ".xyzw"]
+		resolved["var_name"] = resolved["var_name"] + swiz[tc - 1]
+		resolved["type"] = target_type
+	elif cast == SGSTypes.CastType.IMPLICIT_VEC3_TO_COLOR:
+		resolved["var_name"] = "vec4(%s, 1.0)" % resolved["var_name"]
+		resolved["type"] = target_type
+	return resolved
+
+
+static func _zero_value_for_type(port_type: int) -> Dictionary:
+	var glsl_type := TypeSystem.type_to_glsl(port_type)
+	var zero := "0.0"
+	match glsl_type:
+		"vec2":
+			zero = "vec2(0.0)"
+		"vec3":
+			zero = "vec3(0.0)"
+		"vec4":
+			zero = "vec4(0.0)"
+		"sampler2D":
+			zero = "sampler2D()"
+	return {"var_name": zero, "type": port_type}
 
 
 static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionary:
@@ -56,7 +105,7 @@ static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionar
 				or node.definition_id == "subgraph/output")
 		if skip:
 			continue
-		for port in def.outputs:
+		for port in _effective_outputs(doc, node, registry):
 			var key := "%s::%s" % [node_id, port["id"]]
 			if node.definition_id.begins_with("parameter/"):
 				# Output var_name IS the uniform name — downstream nodes reference it directly.
@@ -108,11 +157,12 @@ static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionar
 			continue
 		var port_type: int = def.outputs[0]["type"]
 		var glsl_hint := ": source_color" if node.definition_id == "parameter/color" else ""
+		var dv: Variant = node.get_property("default_value")
 		ir["uniforms"].append({
 			"name":          param_name,
 			"type":          port_type,
 			"glsl_hint":     glsl_hint,
-			"default_value": "",
+			"default_value": str(dv) if dv != null and str(dv) != "" else "",
 		})
 
 	# 4b. Collect auto_uniforms from node definitions (e.g. hint_screen_texture).
@@ -184,27 +234,16 @@ static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionar
 			ir_node["compiler_template"] = "float {result} = " + body + ";"
 
 		# Resolve inputs
-		for port in def.inputs:
+		for port in _effective_inputs(doc, node, registry):
 			var pid: String = port["id"]
 			var to_key := "%s::%s" % [node_id, pid]
 			if input_lookup.has(to_key):
-				var resolved: Dictionary = input_lookup[to_key].duplicate()
-				var cast := TypeSystem.get_cast_type(resolved["type"], port["type"])
-				if cast == SGSTypes.CastType.IMPLICIT_SPLAT:
-					var glsl_type := TypeSystem.type_to_glsl(port["type"])
-					resolved["var_name"] = "%s(%s)" % [glsl_type, resolved["var_name"]]
-					resolved["type"] = port["type"]
-				elif cast == SGSTypes.CastType.IMPLICIT_TRUNCATE:
-					var tc := TypeSystem.get_component_count(port["type"])
-					var swiz := [".x", ".xy", ".xyz", ".xyzw"]
-					resolved["var_name"] = resolved["var_name"] + swiz[tc - 1]
-					resolved["type"] = port["type"]
-				ir_node["resolved_inputs"][pid] = resolved
+				ir_node["resolved_inputs"][pid] = _coerce_value_to_type(input_lookup[to_key], port["type"])
 			else:
 				ir_node["resolved_inputs"][pid] = _resolve_default(node, port)
 
 		# Assign output vars
-		for port in def.outputs:
+		for port in _effective_outputs(doc, node, registry):
 			var pid: String = port["id"]
 			var key := "%s::%s" % [node_id, pid]
 			if var_map.has(key):
@@ -242,15 +281,22 @@ static func _expand_subgraph_node(
 	if sg_path.is_empty():
 		return
 
-	var sg_doc := _load_subgraph(sg_path)
+	var contract := SubgraphContract.load_contract_from_path(sg_path)
+	if not contract.get("valid", false):
+		push_warning("IRBuilder: could not load subgraph '%s' — node '%s' will be skipped." \
+				% [sg_path, node_id])
+		return
+
+	var sg_doc := _load_subgraph(contract.get("resolved_path", sg_path))
 	if sg_doc == null:
 		push_warning("IRBuilder: could not load subgraph '%s' — node '%s' will be skipped." \
 				% [sg_path, node_id])
 		return
 
-	# Resolve this subgraph node's inputs (a, b, c, d) from the parent input_lookup.
-	var parent_inputs: Dictionary = {}  # port_id (a/b/c/d) → IRValue
-	for port_id in ["a", "b", "c", "d"]:
+	# Resolve this subgraph node's inputs from the parent input_lookup.
+	var parent_inputs: Dictionary = {}  # contract port_id → IRValue
+	for port in contract.get("inputs", []):
+		var port_id: String = port["id"]
 		var to_key := "%s::%s" % [node_id, port_id]
 		if input_lookup.has(to_key):
 			parent_inputs[port_id] = input_lookup[to_key].duplicate()
@@ -297,7 +343,7 @@ static func _expand_subgraph_doc(
 		if node.definition_id == "subgraph/input" \
 				or node.definition_id == "subgraph/output":
 			continue
-		for port in def.outputs:
+		for port in _effective_outputs(sg_doc, node, registry):
 			var key := "%s::%s" % [node_id, port["id"]]
 			sg_var_map[key] = {"var_name": "%s_t%d" % [prefix, _global_counter], "type": port["type"]}
 			_global_counter += 1
@@ -307,13 +353,12 @@ static func _expand_subgraph_doc(
 		var node := sg_doc.get_node(node_id)
 		if node == null or node.definition_id != "subgraph/input":
 			continue
-		var inp_name: String = str(node.get_property("input_name")) \
-				if node.get_property("input_name") != null else ""
-		if parent_inputs.has(inp_name):
-			sg_var_map["%s::value" % node_id] = parent_inputs[inp_name].duplicate()
+		var contract_id := SubgraphContract.contract_id_for_node(node, true)
+		var input_type := SubgraphContract.get_input_port_type(node)
+		if parent_inputs.has(contract_id):
+			sg_var_map["%s::value" % node_id] = _coerce_value_to_type(parent_inputs[contract_id], input_type)
 		else:
-			# No parent connection — default to 0.0
-			sg_var_map["%s::value" % node_id] = {"var_name": "0.0", "type": SGSTypes.ShaderType.FLOAT}
+			sg_var_map["%s::value" % node_id] = _zero_value_for_type(input_type)
 
 	# Build edge lookup for the subgraph.
 	var sg_input_lookup := {}
@@ -338,12 +383,12 @@ static func _expand_subgraph_doc(
 			continue  # wired above
 
 		if node.definition_id == "subgraph/output":
-			# Capture output value.
-			var out_name: String = str(node.get_property("output_name")) \
-					if node.get_property("output_name") != null else "out1"
+			var out_name := SubgraphContract.contract_id_for_node(node, false)
 			var in_key := "%s::value" % node_id
 			if sg_input_lookup.has(in_key):
 				outputs[out_name] = sg_input_lookup[in_key].duplicate()
+			else:
+				outputs[out_name] = _zero_value_for_type(SubgraphContract.get_output_port_type(node))
 			continue
 
 		if node.definition_id == "utility/reroute" \
@@ -365,25 +410,15 @@ static func _expand_subgraph_doc(
 			var body: String = str(body_val) if body_val != null and str(body_val) != "" else "0.0"
 			ir_node["compiler_template"] = "float {result} = " + body + ";"
 
-		for port in def.inputs:
+		for port in _effective_inputs(sg_doc, node, registry):
 			var pid: String = port["id"]
 			var to_key := "%s::%s" % [node_id, pid]
 			if sg_input_lookup.has(to_key):
-				var resolved: Dictionary = sg_input_lookup[to_key].duplicate()
-				var cast := TypeSystem.get_cast_type(resolved["type"], port["type"])
-				if cast == SGSTypes.CastType.IMPLICIT_SPLAT:
-					resolved["var_name"] = "%s(%s)" % [TypeSystem.type_to_glsl(port["type"]), resolved["var_name"]]
-					resolved["type"] = port["type"]
-				elif cast == SGSTypes.CastType.IMPLICIT_TRUNCATE:
-					var tc := TypeSystem.get_component_count(port["type"])
-					var swiz := [".x", ".xy", ".xyz", ".xyzw"]
-					resolved["var_name"] = resolved["var_name"] + swiz[tc - 1]
-					resolved["type"] = port["type"]
-				ir_node["resolved_inputs"][pid] = resolved
+				ir_node["resolved_inputs"][pid] = _coerce_value_to_type(sg_input_lookup[to_key], port["type"])
 			else:
 				ir_node["resolved_inputs"][pid] = _resolve_default(node, port)
 
-		for port in def.outputs:
+		for port in _effective_outputs(sg_doc, node, registry):
 			var pid: String = port["id"]
 			var key := "%s::%s" % [node_id, pid]
 			if sg_var_map.has(key):
@@ -400,8 +435,14 @@ static func _expand_subgraph_doc(
 
 
 static func _load_subgraph(path: String) -> ShaderGraphDocument:
+	var resolved_path := SubgraphContract.resolve_subgraph_path(path)
+	if resolved_path.is_empty():
+		return null
 	var serializer := GraphSerializer.new()
-	return serializer.load(path)
+	var doc := serializer.load(resolved_path)
+	if doc == null or doc.get_shader_domain() != "subgraph":
+		return null
+	return doc
 
 
 # ---------------------------------------------------------------------------

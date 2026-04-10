@@ -1,6 +1,8 @@
 @tool
 extends PanelContainer
 
+signal parameter_edited(node_instance: ShaderGraphNodeInstance, key: String, value: Variant)
+
 @onready var _list: VBoxContainer = $VBoxContainer/ScrollContainer/ParamsList
 
 var _document: ShaderGraphDocument = null
@@ -47,12 +49,27 @@ func _make_row(inst: ShaderGraphNodeInstance) -> Control:
 	name_edit.placeholder_text = "param_name"
 	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_edit.text_submitted.connect(func(text: String) -> void:
-		inst.set_property("param_name", text)
+		_update_parameter(inst, "param_name", text)
 	)
 	name_edit.focus_exited.connect(func() -> void:
-		inst.set_property("param_name", name_edit.text)
+		_update_parameter(inst, "param_name", name_edit.text)
 	)
 	row.add_child(name_edit)
+
+	# Default value field (not shown for texture2d — no simple literal default)
+	if inst.definition_id != "parameter/texture2d":
+		var val_edit := LineEdit.new()
+		var cur_val: Variant = inst.get_property("default_value")
+		val_edit.text = str(cur_val) if cur_val != null else ""
+		val_edit.placeholder_text = "default"
+		val_edit.custom_minimum_size = Vector2(72, 0)
+		val_edit.text_submitted.connect(func(text: String) -> void:
+			_update_parameter(inst, "default_value", text)
+		)
+		val_edit.focus_exited.connect(func() -> void:
+			_update_parameter(inst, "default_value", val_edit.text)
+		)
+		row.add_child(val_edit)
 
 	return row
 
@@ -64,3 +81,8 @@ func _type_short(def_id: String) -> String:
 		"parameter/color":     return "color"
 		"parameter/texture2d": return "tex2D"
 		_:                     return "?"
+
+
+func _update_parameter(inst: ShaderGraphNodeInstance, key: String, value: Variant) -> void:
+	inst.set_property(key, value)
+	parameter_edited.emit(inst, key, value)
