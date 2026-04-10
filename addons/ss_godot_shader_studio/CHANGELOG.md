@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0](https://github.com/slice-soft/ss-godot-shader-studio/compare/ss_godot_shader_studio-v0.5.0...ss_godot_shader_studio-v0.6.0) (2026-04-10)
+
+
+### Features
+
+* pure gdscript migration ([#1](https://github.com/slice-soft/ss-godot-shader-studio/issues/1)) ([a835f1b](https://github.com/slice-soft/ss-godot-shader-studio/commit/a835f1b344c45c0c361ee5528f486d4eaf4cda7b))
+* pure gdscript migration ([#2](https://github.com/slice-soft/ss-godot-shader-studio/issues/2)) ([b3d415b](https://github.com/slice-soft/ss-godot-shader-studio/commit/b3d415b77e18244ec4cd7e18a7cbde5afcbdbea1))
+
 ## [0.5.0] — 2026-04-10
 
 ### Added
