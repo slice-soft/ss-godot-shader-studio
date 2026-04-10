@@ -5,10 +5,10 @@ class_name ShaderGraphCompiler
 const COMPILER_VERSION := "0.3.0-gdscript"
 
 
-func compile_gd(doc: ShaderGraphDocument) -> Dictionary:
-	var registry := Engine.get_singleton("NodeRegistry") as NodeRegistry
-	if registry == null:
+func compile_gd(doc: ShaderGraphDocument, source_path: String = "") -> Dictionary:
+	if not Engine.has_singleton("NodeRegistry"):
 		return {"success": false, "shader_code": "", "issues": []}
+	var registry := Engine.get_singleton("NodeRegistry") as NodeRegistry
 
 	# ---- Validation ----
 	var validator := ValidationEngine.new()
@@ -58,7 +58,7 @@ func compile_gd(doc: ShaderGraphDocument) -> Dictionary:
 					"code": "E100"}]
 			}
 
-	var header := _make_banner(doc.get_name())
+	var header := _make_banner(source_path if not source_path.is_empty() else doc.get_name())
 	var shader_code := header + shader_type_line + body
 	return {"success": true, "shader_code": shader_code, "issues": val_result["issues"]}
 

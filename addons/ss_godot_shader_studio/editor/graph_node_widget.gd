@@ -36,13 +36,13 @@ func setup(node_inst: ShaderGraphNodeInstance, port_info: Dictionary) -> void:
 		row.size_flags_horizontal = Control.SIZE_FILL
 
 		var left := Label.new()
-		left.text = inputs[i].capitalize() if i < inputs.size() else ""
+		left.text = str(inputs[i]) if i < inputs.size() else ""
 		left.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(left)
 
 		var right := Label.new()
-		right.text = outputs[i].capitalize() if i < outputs.size() else ""
+		right.text = str(outputs[i]) if i < outputs.size() else ""
 		right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(right)
