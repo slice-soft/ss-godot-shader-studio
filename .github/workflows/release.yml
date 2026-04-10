@@ -19,4 +19,5 @@ jobs:
     uses: slice-soft/ss-pipeline/.github/workflows/release-godot-addons.yml@v0
     secrets: inherit
     with:
-      include-root-docs: true
+      include-root-docs: |
+        README.md

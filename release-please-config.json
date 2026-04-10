@@ -4,7 +4,7 @@
     "addons/ss_godot_shader_studio": {
       "release-type": "simple",
       "component": "ss_godot_shader_studio",
-      "changelog-path": "../../CHANGELOG.md",
+      "changelog-path": "CHANGELOG.md",
       "pull-request-title-pattern": "chore(main): release ${version}"
     }
   }
