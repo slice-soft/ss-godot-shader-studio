@@ -13,3 +13,7 @@ config_version=5
 config/name="SS Godot Shader Studio"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/main_scene="res://test/smoke_test_phase_a.tscn"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/ss_godot_shader_studio/plugin.cfg")
