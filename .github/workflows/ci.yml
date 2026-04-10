@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, labeled, unlabeled, synchronize]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate-pr:
+    if: github.event_name == 'pull_request'
+    uses: slice-soft/ss-pipeline/.github/workflows/validate-pr.yml@v0
+    secrets: inherit
+
+  test:
+    uses: slice-soft/ss-pipeline/.github/workflows/ci-godot.yml@v0
+    with:
+      godot-version: "4.5"
+      test-script: test/runner.gd

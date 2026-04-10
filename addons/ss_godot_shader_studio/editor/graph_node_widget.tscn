@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://baokjkmwdg28l"]
+
+[ext_resource type="Script" uid="uid://ch8hovsfrbkpf" path="res://addons/ss_godot_shader_studio/editor/graph_node_widget.gd" id="1_vcc3n"]
+
+[node name="GraphNodeWidget" type="GraphNode"]
+offset_right = 9.0
+offset_bottom = 55.0
+slot/0/left_enabled = false
+slot/0/left_type = 0
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = false
+slot/0/right_type = 0
+slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+script = ExtResource("1_vcc3n")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "título del nodo"

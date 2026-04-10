@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://7g8aojjlxq4k"]
+
+[ext_resource type="PackedScene" uid="uid://c40abip76swdg" path="res://addons/ss_godot_shader_studio/editor/node_search_popup.tscn" id="1_bfiyl"]
+[ext_resource type="Script" uid="uid://cjo2lnank0bav" path="res://addons/ss_godot_shader_studio/editor/graph_canvas.gd" id="1_tu3jg"]
+
+[node name="GraphCanvas" type="GraphEdit"]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_tu3jg")
+
+[node name="NodeSearchPopup" parent="." instance=ExtResource("1_bfiyl")]
+visible = false

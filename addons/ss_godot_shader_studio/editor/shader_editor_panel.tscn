@@ -1,0 +1,97 @@
+[gd_scene load_steps=7 format=3 uid="uid://dje7c5242603"]
+
+[ext_resource type="Script" uid="uid://r0qf5qg3ierd" path="res://addons/ss_godot_shader_studio/editor/shader_editor_panel.gd" id="1_643ne"]
+[ext_resource type="PackedScene" uid="uid://7g8aojjlxq4k" path="res://addons/ss_godot_shader_studio/editor/graph_canvas.tscn" id="1_mr0gp"]
+[ext_resource type="PackedScene" uid="uid://cpi3b46ri8dhq" path="res://addons/ss_godot_shader_studio/editor/node_inspector.tscn" id="2_inspector"]
+[ext_resource type="PackedScene" uid="uid://b8o4osch2m7yx" path="res://addons/ss_godot_shader_studio/preview/shader_preview.tscn" id="3_preview"]
+[ext_resource type="PackedScene" uid="uid://pg550skihgrf" path="res://addons/ss_godot_shader_studio/editor/compiler_output.tscn" id="4_output"]
+[ext_resource type="PackedScene" uid="uid://dbx86tgpo72x" path="res://addons/ss_godot_shader_studio/editor/parameters_panel.tscn" id="5_params"]
+
+[node name="ShaderEditorPanel" type="Control"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_643ne")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="New" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "New"
+
+[node name="NewSubgraph" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "New Subgraph"
+
+[node name="Open" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Open"
+
+[node name="Save" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Save"
+
+[node name="Compile" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Compile"
+
+[node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = -260
+
+[node name="GraphCanvas" parent="VBoxContainer/HSplitContainer" instance=ExtResource("1_mr0gp")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VSplitContainer" type="VSplitContainer" parent="VBoxContainer/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(260, 0)
+split_offset = 220
+
+[node name="RightTabs" type="TabContainer" parent="VBoxContainer/HSplitContainer/VSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 100)
+
+[node name="NodeInspector" parent="VBoxContainer/HSplitContainer/VSplitContainer/RightTabs" instance=ExtResource("2_inspector")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ParametersPanel" parent="VBoxContainer/HSplitContainer/VSplitContainer/RightTabs" instance=ExtResource("5_params")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VSplitContainer2" type="VSplitContainer" parent="VBoxContainer/HSplitContainer/VSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = -120
+
+[node name="ShaderPreview" parent="VBoxContainer/HSplitContainer/VSplitContainer/VSplitContainer2" instance=ExtResource("3_preview")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 120)
+
+[node name="CompilerOutput" parent="VBoxContainer/HSplitContainer/VSplitContainer/VSplitContainer2" instance=ExtResource("4_output")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 80)

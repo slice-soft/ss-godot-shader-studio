@@ -4,32 +4,33 @@ A `ShaderNodeDefinition` describes a reusable node type. It is registered in the
 
 ## Fields
 
-```cpp
-class ShaderNodeDefinition : public Resource {
-    String id;                    // e.g. "math/add"
-    String display_name;          // e.g. "Add"
-    String category;              // e.g. "Math"
-    PackedStringArray keywords;   // for search: ["add", "sum", "plus"]
-    Array inputs;                 // PortDefinition[]
-    Array outputs;                // PortDefinition[]
-    Dictionary properties_schema; // editable properties on the node
-    int stage_support;            // bitfield: VERTEX | FRAGMENT | LIGHT
-    int domain_support;           // bitfield of ShaderDomain values
-    String compiler_template;     // GLSL snippet with {port_id} placeholders
-    PreviewPolicy preview_policy; // FULL | THUMBNAIL | NONE
-};
+```gdscript
+class_name ShaderNodeDefinition extends Resource
+
+var id: String                    # e.g. "math/add"
+var display_name: String          # e.g. "Add"
+var category: String              # e.g. "Math"
+var keywords: Array               # for search: ["add", "sum", "plus"]
+var inputs: Array                 # Array of port Dictionaries
+var outputs: Array                # Array of port Dictionaries
+var properties_schema: Dictionary # editable properties on the node
+var stage_support: int            # SGSTypes stage flags (STAGE_ANY, STAGE_VERTEX, etc.)
+var domain_support: int           # SGSTypes domain flags (DOMAIN_ALL, DOMAIN_SPATIAL, etc.)
+var compiler_template: String     # GLSL snippet with {port_id} placeholders
 ```
 
-## PortDefinition fields
+## Port Dictionary fields
 
-```cpp
-struct PortDefinition {
-    String id;            // matches placeholder in compiler_template
-    String name;          // display label
-    ShaderType type;      // type enum value
-    Variant default_value; // used when port is unconnected
-    bool optional;        // if false, must be connected to compile
-};
+Each entry in `inputs` and `outputs` is a Dictionary:
+
+```gdscript
+{
+    "id":       String,    # matches placeholder in compiler_template
+    "name":     String,    # display label
+    "type":     int,       # SGSTypes.ShaderType value
+    "default":  Variant,   # used when port is unconnected (optional)
+    "optional": bool,      # if false, must be connected to compile
+}
 ```
 
 ## compiler_template syntax
@@ -78,81 +79,57 @@ Defines editable values shown in the node inspector. These are not port connecti
 The compiler template can reference properties with `{prop:property_name}`:
 
 ```glsl
-// Lerp with optional clamp
 float {result} = mix({a}, {b}, {t});
-// {prop:clamp_result} → expands to either "" or "result = clamp(result, 0.0, 1.0);"
+// {prop:clamp_result} expands at compile time to "" or "result = clamp(result, 0.0, 1.0);"
 ```
 
 ## stage_support and domain_support
 
-Bitfield values (defined in `shader_domain.h`):
+Bitfield values defined in `SGSTypes`:
 
-```cpp
-// Stage flags
-const int STAGE_VERTEX   = 1 << 0;
-const int STAGE_FRAGMENT = 1 << 1;
-const int STAGE_LIGHT    = 1 << 2;
-const int STAGE_ANY      = STAGE_VERTEX | STAGE_FRAGMENT | STAGE_LIGHT;
+```gdscript
+# Stage flags
+SGSTypes.STAGE_VERTEX   = 1 << 0
+SGSTypes.STAGE_FRAGMENT = 1 << 1
+SGSTypes.STAGE_LIGHT    = 1 << 2
+SGSTypes.STAGE_ANY      = STAGE_VERTEX | STAGE_FRAGMENT | STAGE_LIGHT
 
-// Domain flags
-const int DOMAIN_SPATIAL      = 1 << 0;
-const int DOMAIN_CANVAS_ITEM  = 1 << 1;
-const int DOMAIN_PARTICLES    = 1 << 2;
-const int DOMAIN_SKY          = 1 << 3;
-const int DOMAIN_FOG          = 1 << 4;
-const int DOMAIN_FULLSCREEN   = 1 << 5;
-const int DOMAIN_ALL          = 0x3F;
+# Domain flags
+SGSTypes.DOMAIN_SPATIAL = 1 << 0
+SGSTypes.DOMAIN_ALL     = 0x3F
 ```
 
 A node available in all stages of spatial only:
-```cpp
-stage_support = STAGE_ANY;
-domain_support = DOMAIN_SPATIAL;
+```gdscript
+stage_support  = SGSTypes.STAGE_ANY
+domain_support = SGSTypes.DOMAIN_SPATIAL
 ```
 
 A node only valid in the fragment stage across all domains:
-```cpp
-stage_support = STAGE_FRAGMENT;
-domain_support = DOMAIN_ALL;
+```gdscript
+stage_support  = SGSTypes.STAGE_FRAGMENT
+domain_support = SGSTypes.DOMAIN_ALL
 ```
 
 ## Example: complete Add node definition
 
-```cpp
-ShaderNodeDefinition* add_def = memnew(ShaderNodeDefinition);
-add_def->set_id("math/add");
-add_def->set_display_name("Add");
-add_def->set_category("Math");
-add_def->set_keywords({"add", "sum", "plus", "+"});
-
-PortDefinition in_a;
-in_a.id = "a";
-in_a.name = "A";
-in_a.type = ShaderType::FLOAT;
-in_a.default_value = 0.0f;
-in_a.optional = false;
-
-PortDefinition in_b;
-in_b.id = "b";
-in_b.name = "B";
-in_b.type = ShaderType::FLOAT;
-in_b.default_value = 0.0f;
-in_b.optional = false;
-
-PortDefinition out_result;
-out_result.id = "result";
-out_result.name = "Result";
-out_result.type = ShaderType::FLOAT;
-out_result.optional = false;
-
-add_def->set_inputs({in_a, in_b});
-add_def->set_outputs({out_result});
-add_def->set_stage_support(STAGE_ANY);
-add_def->set_domain_support(DOMAIN_ALL);
-add_def->set_compiler_template("float {result} = {a} + {b};");
-add_def->set_preview_policy(PreviewPolicy::THUMBNAIL);
-
-NodeRegistry::get_singleton()->register_definition(add_def);
+```gdscript
+var add_def := ShaderNodeDefinition.new()
+add_def.id           = "math/add"
+add_def.display_name = "Add"
+add_def.category     = "Math"
+add_def.keywords     = ["add", "sum", "plus", "+"]
+add_def.inputs = [
+    {"id": "a", "name": "A", "type": SGSTypes.ShaderType.FLOAT, "default": 0.0, "optional": false},
+    {"id": "b", "name": "B", "type": SGSTypes.ShaderType.FLOAT, "default": 0.0, "optional": false},
+]
+add_def.outputs = [
+    {"id": "result", "name": "Result", "type": SGSTypes.ShaderType.FLOAT},
+]
+add_def.stage_support    = SGSTypes.STAGE_ANY
+add_def.domain_support   = SGSTypes.DOMAIN_ALL
+add_def.compiler_template = "float {result} = {a} + {b};"
+registry.register_definition(add_def)
 ```
 
 ## Registering external node packages
@@ -161,11 +138,11 @@ Third-party addons can register their own node definitions at plugin load time:
 
 ```gdscript
 # In the addon's plugin.gd _enter_tree():
-var registry = NodeRegistry.get_singleton()
-var my_def = ShaderNodeDefinition.new()
+var registry = Engine.get_singleton("NodeRegistry") as NodeRegistry
+var my_def := ShaderNodeDefinition.new()
 my_def.id = "myplugin/custom_noise"
 # ... configure fields ...
 registry.register_definition(my_def)
 ```
 
-This is the full extensibility API for Phase E.
+This is the full extensibility API — no C++ required, no recompilation needed.

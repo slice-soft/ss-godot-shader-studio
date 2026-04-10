@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3 uid="uid://b8o4osch2m7yx"]
+
+[ext_resource type="Script" uid="uid://ccnn7koa2lmp5" path="res://addons/ss_godot_shader_studio/preview/shader_preview.gd" id="1_mnom4"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ceicc"]
+
+[node name="ShaderPreview" type="SubViewportContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+script = ExtResource("1_mnom4")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+handle_input_locally = false
+render_target_update_mode = 4
+
+[node name="Node3D" type="Node3D" parent="SubViewport"]
+
+[node name="Camera3D" type="Camera3D" parent="SubViewport/Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewport/Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewport/Node3D"]
+mesh = SubResource("CapsuleMesh_ceicc")
