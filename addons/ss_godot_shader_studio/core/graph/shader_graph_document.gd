@@ -29,6 +29,7 @@ func get_stage_config() -> Dictionary: return stage_config
 func get_parameters() -> Array:     return parameters
 func get_subgraph_refs() -> Array:  return subgraph_refs
 func get_editor_state() -> Dictionary: return editor_state
+func get_generated_shader_dir() -> String: return str(editor_state.get("generated_shader_dir", ""))
 
 func set_uuid(v: String) -> void:          uuid = v
 func set_name(v: String) -> void:          name = v
@@ -38,6 +39,7 @@ func set_stage_config(v: Dictionary) -> void: stage_config = v
 func set_parameters(v: Array) -> void:     parameters = v
 func set_subgraph_refs(v: Array) -> void:  subgraph_refs = v
 func set_editor_state(v: Dictionary) -> void: editor_state = v
+func set_generated_shader_dir(v: String) -> void: editor_state["generated_shader_dir"] = v
 
 
 # ---- Node management ----
