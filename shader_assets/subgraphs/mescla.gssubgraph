@@ -1,0 +1,150 @@
+{
+	"format_version": 1,
+	"uuid": "",
+	"name": "mescla",
+	"shader_domain": "subgraph",
+	"stage_config": {
+		"has_vertex": true,
+		"has_fragment": true,
+		"has_light": false
+	},
+	"nodes": [
+		{
+			"id": "node_1",
+			"definition_id": "swizzle/append_vec3",
+			"title": "Append Vec3",
+			"position": {
+				"x": 600.0,
+				"y": 280.0
+			},
+			"properties": {
+				"x": "0.0",
+				"y": "0.0",
+				"z": "0.0"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_4",
+			"definition_id": "subgraph/input",
+			"title": "Subgraph Input",
+			"position": {
+				"x": 340.0,
+				"y": 180.0
+			},
+			"properties": {
+				"input_name": "HUE",
+				"input_type": "float",
+				"port_id": "in_node_4"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_5",
+			"definition_id": "subgraph/input",
+			"title": "Subgraph Input",
+			"position": {
+				"x": 300.0,
+				"y": 300.0
+			},
+			"properties": {
+				"input_name": "Saturation",
+				"input_type": "float",
+				"port_id": "in_node_5"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_6",
+			"definition_id": "color/hsv_to_rgb",
+			"title": "HSV to RGB",
+			"position": {
+				"x": 800.0,
+				"y": 260.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_7",
+			"definition_id": "subgraph/output",
+			"title": "Subgraph Output",
+			"position": {
+				"x": 1060.0,
+				"y": 320.0
+			},
+			"properties": {
+				"output_name": "RGB",
+				"output_type": "vec3",
+				"port_id": "out_node_7"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_8",
+			"definition_id": "subgraph/input",
+			"title": "Subgraph Input",
+			"position": {
+				"x": 350.603515625,
+				"y": 573.063232421875
+			},
+			"properties": {
+				"input_name": "Z",
+				"input_type": "float",
+				"port_id": "in_node_8"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		}
+	],
+	"edges": [
+		{
+			"id": "edge_3",
+			"from_node_id": "node_4",
+			"from_port_id": "value",
+			"to_node_id": "node_1",
+			"to_port_id": "x"
+		},
+		{
+			"id": "edge_4",
+			"from_node_id": "node_5",
+			"from_port_id": "value",
+			"to_node_id": "node_1",
+			"to_port_id": "y"
+		},
+		{
+			"id": "edge_5",
+			"from_node_id": "node_1",
+			"from_port_id": "result",
+			"to_node_id": "node_6",
+			"to_port_id": "hsv"
+		},
+		{
+			"id": "edge_6",
+			"from_node_id": "node_6",
+			"from_port_id": "rgb",
+			"to_node_id": "node_7",
+			"to_port_id": "value"
+		},
+		{
+			"id": "edge_7",
+			"from_node_id": "node_8",
+			"from_port_id": "value",
+			"to_node_id": "node_1",
+			"to_port_id": "z"
+		}
+	],
+	"frames": [],
+	"parameters": [],
+	"subgraph_refs": [],
+	"editor_state": {
+
+	}
+}

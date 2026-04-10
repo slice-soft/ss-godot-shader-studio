@@ -1,0 +1,163 @@
+{
+	"format_version": 1,
+	"uuid": "",
+	"name": "Screen Green",
+	"shader_domain": "fullscreen",
+	"stage_config": {
+		"has_vertex": false,
+		"has_fragment": true,
+		"has_light": false
+	},
+	"nodes": [
+		{
+			"id": "node_4",
+			"definition_id": "input/screen_texture",
+			"title": "Screen Texture",
+			"position": {
+				"x": 80.0,
+				"y": 240.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_6",
+			"definition_id": "color/rgb_to_hsv",
+			"title": "RGB to HSV",
+			"position": {
+				"x": 300.0,
+				"y": 280.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_7",
+			"definition_id": "swizzle/split_vec3",
+			"title": "Split Vec3",
+			"position": {
+				"x": 520.0,
+				"y": 260.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_9",
+			"definition_id": "parameter/float",
+			"title": "Hue (Verde=0.33)",
+			"position": {
+				"x": 580.0,
+				"y": 40.0
+			},
+			"properties": {
+				"param_name": "green_hue",
+				"default_value": "0.33"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_10",
+			"definition_id": "parameter/float",
+			"title": "Saturacion",
+			"position": {
+				"x": 600.0,
+				"y": 140.0
+			},
+			"properties": {
+				"param_name": "saturation",
+				"default_value": "1.0"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_13",
+			"definition_id": "output/fullscreen",
+			"title": "Fullscreen Output",
+			"position": {
+				"x": 1220.0,
+				"y": 200.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_14",
+			"definition_id": "utility/subgraph",
+			"title": "Subgraph",
+			"position": {
+				"x": 920.0,
+				"y": 140.0
+			},
+			"properties": {
+				"subgraph_path": "res://shader_assets/subgraphs/mescla.gssubgraph"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		}
+	],
+	"edges": [
+		{
+			"id": "edge_1",
+			"from_node_id": "node_4",
+			"from_port_id": "rgb",
+			"to_node_id": "node_6",
+			"to_port_id": "rgb"
+		},
+		{
+			"id": "edge_11",
+			"from_node_id": "node_9",
+			"from_port_id": "value",
+			"to_node_id": "node_14",
+			"to_port_id": "in_node_4"
+		},
+		{
+			"id": "edge_12",
+			"from_node_id": "node_10",
+			"from_port_id": "value",
+			"to_node_id": "node_14",
+			"to_port_id": "in_node_5"
+		},
+		{
+			"id": "edge_13",
+			"from_node_id": "node_14",
+			"from_port_id": "out_node_7",
+			"to_node_id": "node_13",
+			"to_port_id": "color"
+		},
+		{
+			"id": "edge_14",
+			"from_node_id": "node_7",
+			"from_port_id": "z",
+			"to_node_id": "node_14",
+			"to_port_id": "in_node_8"
+		},
+		{
+			"id": "edge_15",
+			"from_node_id": "node_6",
+			"from_port_id": "hsv",
+			"to_node_id": "node_7",
+			"to_port_id": "v"
+		}
+	],
+	"frames": [],
+	"parameters": [],
+	"subgraph_refs": [],
+	"editor_state": {
+		"generated_shader_dir": "res://assets/shaders"
+	}
+}
