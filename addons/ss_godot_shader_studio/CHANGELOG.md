@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.0](https://github.com/slice-soft/ss-godot-shader-studio/compare/ss_godot_shader_studio-v0.6.0...ss_godot_shader_studio-v0.7.0) (2026-04-10)
+
+
+### Features
+
+* shader studio editor hardening ([#4](https://github.com/slice-soft/ss-godot-shader-studio/issues/4)) ([fcc51af](https://github.com/slice-soft/ss-godot-shader-studio/commit/fcc51af98109ada217486e6de1d4d5d6e9099980))
+
 ## [0.6.0](https://github.com/slice-soft/ss-godot-shader-studio/compare/ss_godot_shader_studio-v0.5.0...ss_godot_shader_studio-v0.6.0) (2026-04-10)
 
 
