@@ -119,6 +119,88 @@ func test_apply_validation_result_and_clear_validation_toggle_titlebar_override(
 	assert_false(widget.has_theme_stylebox_override("titlebar"))
 
 
+func test_refresh_node_widget_preserves_visual_position() -> void:
+	var doc := ShaderGraphDocument.new()
+	doc.set_shader_domain("canvas_item")
+	var param_id := doc.add_node("parameter/float", Vector2(32, 48))
+	doc.add_node("output/canvas_item", Vector2(320, 0))
+
+	_canvas.load_document(doc)
+
+	var widget := _canvas.get_node(NodePath(param_id)) as GraphNode
+	widget.position_offset = Vector2(420, 180)
+	_canvas.refresh_node_widget(doc.get_node(param_id))
+
+	assert_eq(doc.get_node(param_id).get_position(), Vector2(420, 180))
+	assert_eq(widget.position_offset, Vector2(420, 180))
+
+
+func test_parameter_widget_edit_bubbles_up_to_canvas_signal() -> void:
+	var doc := ShaderGraphDocument.new()
+	doc.set_shader_domain("canvas_item")
+	var param_id := doc.add_node("parameter/float", Vector2.ZERO)
+	doc.add_node("output/canvas_item", Vector2(260, 0))
+
+	_canvas.load_document(doc)
+
+	var seen := {
+		"node": null,
+		"key": "",
+		"value": null,
+	}
+	_canvas.parameter_property_edited.connect(func(node_instance: ShaderGraphNodeInstance, key: String, value: Variant) -> void:
+		seen["node"] = node_instance
+		seen["key"] = key
+		seen["value"] = value
+	)
+
+	var widget := _canvas.get_node(NodePath(param_id)) as GraphNode
+	widget._emit_property("param_name", "tint_amount")
+
+	assert_eq(seen["node"], doc.get_node(param_id))
+	assert_eq(seen["key"], "param_name")
+	assert_eq(seen["value"], "tint_amount")
+	assert_eq(doc.get_node(param_id).get_property("param_name"), "tint_amount")
+
+
+func test_search_popup_filters_domain_stage_and_enter_activates_result() -> void:
+	var doc := ShaderGraphDocument.new()
+	doc.set_shader_domain("canvas_item")
+	doc.set_stage_config({
+		"has_vertex": false,
+		"has_fragment": true,
+		"has_light": false,
+	})
+	doc.add_node("output/canvas_item", Vector2.ZERO)
+
+	_canvas.load_document(doc)
+
+	var popup = _canvas.get_node("NodeSearchPopup")
+	var chosen := {
+		"id": "",
+		"pos": Vector2.ZERO,
+	}
+	popup.node_chosen.connect(func(def_id: String, graph_pos: Vector2) -> void:
+		chosen["id"] = def_id
+		chosen["pos"] = graph_pos
+	)
+
+	popup.open_at(Vector2i.ZERO, Vector2(12, 34), _canvas._get_domain_flag(), _canvas._get_stage_flag())
+
+	assert_true(_tree_contains_text(popup._tree, "Canvas Texture"))
+	assert_false(_tree_contains_text(popup._tree, "Fresnel"))
+	assert_false(_tree_contains_text(popup._tree, "Canvas Vertex"))
+
+	popup._refresh_tree("canvas texture")
+	var enter := InputEventKey.new()
+	enter.pressed = true
+	enter.keycode = KEY_ENTER
+	popup._on_search_key(enter)
+
+	assert_eq(chosen["id"], "input/canvas_texture")
+	assert_eq(chosen["pos"], Vector2(12, 34))
+
+
 func _make_subgraph(inputs: Array, outputs: Array) -> ShaderGraphDocument:
 	var doc := ShaderGraphDocument.new()
 	doc.set_shader_domain("subgraph")
@@ -156,3 +238,20 @@ func _free_node(node: Node) -> void:
 	if node.get_parent() != null:
 		node.get_parent().remove_child(node)
 	node.free()
+
+
+func _tree_contains_text(tree: Tree, label: String) -> bool:
+	var root := tree.get_root()
+	if root == null:
+		return false
+
+	var stack: Array[TreeItem] = [root]
+	while not stack.is_empty():
+		var item: TreeItem = stack.pop_back()
+		if item.get_text(0).strip_edges() == label:
+			return true
+		var child: TreeItem = item.get_first_child()
+		while child != null:
+			stack.append(child)
+			child = child.get_next()
+	return false

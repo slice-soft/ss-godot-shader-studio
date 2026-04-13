@@ -6,6 +6,7 @@ const SubgraphContract = preload("res://addons/ss_godot_shader_studio/core/graph
 signal node_selected_in_canvas(node_instance: ShaderGraphNodeInstance)
 signal frame_selected_in_canvas(frame_data: Dictionary, frame_widget: GraphFrame)
 signal graph_changed
+signal parameter_property_edited(node_instance: ShaderGraphNodeInstance, key: String, value: Variant)
 
 # Port data is read live from NodeRegistry — no hardcoded table needed.
 
@@ -78,7 +79,8 @@ func _gui_input(event: InputEvent) -> void:
 					break
 			if not on_node:
 				var graph_pos := mb.position / zoom + scroll_offset
-				_search_popup.open_at(DisplayServer.mouse_get_position(), graph_pos)
+				_search_popup.open_at(DisplayServer.mouse_get_position(), graph_pos,
+						_get_domain_flag(), _get_stage_flag())
 				accept_event()
 	elif event is InputEventKey and event.pressed and not event.echo \
 			and (event.ctrl_pressed or event.meta_pressed):
@@ -95,6 +97,30 @@ func _gui_input(event: InputEvent) -> void:
 			KEY_G:
 				_create_frame_from_selection()
 				accept_event()
+
+func _get_domain_flag() -> int:
+	if _document == null:
+		return SGSTypes.DOMAIN_ALL
+	match _document.shader_domain:
+		"spatial":     return SGSTypes.DOMAIN_SPATIAL
+		"canvas_item": return SGSTypes.DOMAIN_CANVAS_ITEM
+		"particles":   return SGSTypes.DOMAIN_PARTICLES
+		"sky":         return SGSTypes.DOMAIN_SKY
+		"fog":         return SGSTypes.DOMAIN_FOG
+		"fullscreen":  return SGSTypes.DOMAIN_FULLSCREEN
+	return SGSTypes.DOMAIN_ALL
+
+
+func _get_stage_flag() -> int:
+	if _document == null:
+		return SGSTypes.STAGE_ANY
+	var cfg := _document.stage_config
+	var flag := 0
+	if cfg.get("has_vertex",   false): flag |= SGSTypes.STAGE_VERTEX
+	if cfg.get("has_fragment", false): flag |= SGSTypes.STAGE_FRAGMENT
+	if cfg.get("has_light",    false): flag |= SGSTypes.STAGE_LIGHT
+	return flag if flag != 0 else SGSTypes.STAGE_ANY
+
 
 func load_document(doc: ShaderGraphDocument) -> void:
 	_document = doc
@@ -151,6 +177,11 @@ func _create_node_widget(node_inst: ShaderGraphNodeInstance) -> void:
 	widget.position_offset = node_inst.get_position()
 	add_child(widget)
 	widget.setup(node_inst, _get_port_info_for_node(node_inst))
+	# For parameter nodes, forward inline property edits as canvas-level signal.
+	if node_inst.get_definition_id().begins_with("parameter/"):
+		widget.connect("node_property_changed", func(key: String, value: Variant) -> void:
+			parameter_property_edited.emit(node_inst, key, value)
+		)
 
 
 func refresh_node_widget(node_inst: ShaderGraphNodeInstance) -> void:
@@ -160,8 +191,10 @@ func refresh_node_widget(node_inst: ShaderGraphNodeInstance) -> void:
 	if widget == null:
 		_create_node_widget(node_inst)
 		return
+	# Sync current visual position before refreshing so the document stays up
+	# to date and we don't clobber the position the user placed the widget at.
+	node_inst.set_position(widget.position_offset)
 	widget.setup(node_inst, _get_port_info_for_node(node_inst))
-	widget.position_offset = node_inst.get_position()
 
 
 func refresh_dynamic_ports() -> Dictionary:

@@ -105,6 +105,7 @@ func _ready() -> void:
 	_graph_canvas.node_selected_in_canvas.connect(_on_node_selected)
 	_graph_canvas.frame_selected_in_canvas.connect(_on_frame_selected)
 	_graph_canvas.graph_changed.connect(_on_graph_changed)
+	_graph_canvas.parameter_property_edited.connect(_on_parameter_edited)
 	if _undo_redo != null:
 		_graph_canvas.setup_undo_redo(_undo_redo)
 
