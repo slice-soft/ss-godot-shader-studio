@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.0](https://github.com/slice-soft/ss-godot-shader-studio/compare/ss_godot_shader_studio-v0.7.0...ss_godot_shader_studio-v0.8.0) (2026-04-13)
+
+
+### Features
+
+* core stage varyings and domain validation ([#8](https://github.com/slice-soft/ss-godot-shader-studio/issues/8)) ([d7fbe9b](https://github.com/slice-soft/ss-godot-shader-studio/commit/d7fbe9b8b0f8726fe5a06b4271ded2214b307dee))
+* editor inline parameters and search ([#9](https://github.com/slice-soft/ss-godot-shader-studio/issues/9)) ([495cac9](https://github.com/slice-soft/ss-godot-shader-studio/commit/495cac96a0a10bcaac8ff3720dd79efde9d1e399))
+* examples extreme validation assets ([#10](https://github.com/slice-soft/ss-godot-shader-studio/issues/10)) ([e93f8df](https://github.com/slice-soft/ss-godot-shader-studio/commit/e93f8df9086f61d5a774d7468319c7572424c285))
+* **registry:** split stdlib into modular node catalogs ([#6](https://github.com/slice-soft/ss-godot-shader-studio/issues/6)) ([cd0de95](https://github.com/slice-soft/ss-godot-shader-studio/commit/cd0de95a034c7079f5a64e51433cc9a3dcb51310))
+
 ## [0.7.0](https://github.com/slice-soft/ss-godot-shader-studio/compare/ss_godot_shader_studio-v0.6.0...ss_godot_shader_studio-v0.7.0) (2026-04-10)
 
 
