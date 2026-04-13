@@ -73,6 +73,20 @@ static func _zero_value_for_type(port_type: int) -> Dictionary:
 	return {"var_name": zero, "type": port_type}
 
 
+static func _resolved_stage(node: ShaderGraphNodeInstance, def: ShaderNodeDefinition) -> String:
+	if node.stage_scope == "vertex":
+		return "vertex"
+	if node.stage_scope == "fragment":
+		return "fragment"
+	if def.stage_support == SGSTypes.STAGE_VERTEX:
+		return "vertex"
+	return "fragment"
+
+
+static func _supports_stage_varyings(domain: String) -> bool:
+	return domain == "spatial" or domain == "canvas_item" or domain == "fullscreen"
+
+
 static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionary:
 	_global_counter = 0
 	var ir := {
@@ -86,6 +100,15 @@ static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionar
 
 	# 1. Topological sort (Kahn's algorithm)
 	var sorted := _topological_sort(doc)
+	var node_stage_map: Dictionary = {}
+	for node_id in sorted:
+		var node := doc.get_node(node_id)
+		if node == null:
+			continue
+		var def := registry.get_definition(node.definition_id)
+		if def == null:
+			continue
+		node_stage_map[node_id] = _resolved_stage(node, def)
 
 	# 2. Assign output variable names: "node_id::port_id" → IRValue
 	# Transparent nodes (reroute, subgraph) are skipped — they get their
@@ -118,12 +141,39 @@ static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionar
 
 	# 3. Build edge lookup: "to_node_id::to_port_id" → IRValue
 	var input_lookup := {}
+	var varying_by_source: Dictionary = {}
+	var varying_assignments: Dictionary = {}
 	for e in doc.get_all_edges():
 		var edge := e as ShaderGraphEdge
 		var from_key := "%s::%s" % [edge.from_node_id, edge.from_port_id]
 		var to_key   := "%s::%s" % [edge.to_node_id, edge.to_port_id]
-		if var_map.has(from_key):
-			input_lookup[to_key] = var_map[from_key].duplicate()
+		if not var_map.has(from_key):
+			continue
+		var from_stage := String(node_stage_map.get(edge.from_node_id, "fragment"))
+		var to_stage := String(node_stage_map.get(edge.to_node_id, "fragment"))
+		if from_stage == "vertex" \
+				and to_stage == "fragment" \
+				and _supports_stage_varyings(doc.get_shader_domain()):
+			if not varying_by_source.has(from_key):
+				var varying_name := "_v%d" % ir["varyings"].size()
+				var varying_value := {
+					"var_name": varying_name,
+					"type": var_map[from_key]["type"],
+				}
+				varying_by_source[from_key] = varying_value
+				ir["varyings"].append({
+					"name": varying_name,
+					"type": varying_value["type"],
+				})
+				if not varying_assignments.has(edge.from_node_id):
+					varying_assignments[edge.from_node_id] = []
+				varying_assignments[edge.from_node_id].append({
+					"port_id": edge.from_port_id,
+					"varying_name": varying_name,
+				})
+			input_lookup[to_key] = (varying_by_source[from_key] as Dictionary).duplicate()
+			continue
+		input_lookup[to_key] = var_map[from_key].duplicate()
 
 	# 3b. Propagate reroute nodes (in topological order so chains work).
 	for node_id in sorted:
@@ -225,6 +275,7 @@ static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionar
 			"stage": node.stage_scope,
 			"resolved_inputs": {},
 			"output_vars": {},
+			"post_lines": [],
 		}
 
 		# --- Custom Function: build template from 'body' property ---
@@ -249,9 +300,16 @@ static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionar
 			if var_map.has(key):
 				ir_node["output_vars"][pid] = var_map[key]
 
+		if varying_assignments.has(node_id):
+			for entry in varying_assignments[node_id]:
+				var port_id: String = entry["port_id"]
+				if not ir_node["output_vars"].has(port_id):
+					continue
+				var source_var: String = ir_node["output_vars"][port_id]["var_name"]
+				ir_node["post_lines"].append("%s = %s;" % [entry["varying_name"], source_var])
+
 		# Stage routing
-		var is_vertex: bool = (node.stage_scope == "vertex") or \
-							  (def.stage_support == SGSTypes.STAGE_VERTEX)
+		var is_vertex: bool = String(node_stage_map.get(node_id, "fragment")) == "vertex"
 		if is_vertex:
 			ir["vertex_nodes"].append(ir_node)
 		else:

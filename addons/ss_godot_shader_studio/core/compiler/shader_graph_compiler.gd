@@ -88,6 +88,18 @@ func _emit_helpers(ir: Dictionary) -> String:
 	return code
 
 
+func _emit_varyings(ir: Dictionary) -> String:
+	var code := ""
+	var varyings: Array = ir["varyings"].duplicate()
+	varyings.sort_custom(func(a, b): return a["name"] < b["name"])
+	for v in varyings:
+		var type_str := TypeSystem.type_to_glsl(v["type"])
+		code += "varying %s %s;\n" % [type_str, v["name"]]
+	if not varyings.is_empty():
+		code += "\n"
+	return code
+
+
 func _emit_nodes(nodes: Array) -> String:
 	var out := ""
 	for ir_node in nodes:
@@ -97,6 +109,8 @@ func _emit_nodes(nodes: Array) -> String:
 			ir_node["output_vars"],
 			ir_node["properties"])
 		out += "\t" + line.replace("\n", "\n\t") + "\n"
+		for post_line in ir_node.get("post_lines", []):
+			out += "\t" + str(post_line) + "\n"
 	return out
 
 
@@ -127,6 +141,7 @@ func _make_banner(source_name: String) -> String:
 func _emit_spatial(ir: Dictionary) -> String:
 	var code := ""
 	code += _emit_uniforms(ir)
+	code += _emit_varyings(ir)
 	code += _emit_helpers(ir)
 
 	var vertex_nodes: Array = ir["vertex_nodes"]
@@ -147,6 +162,7 @@ func _emit_spatial(ir: Dictionary) -> String:
 func _emit_canvas_item(ir: Dictionary) -> String:
 	var code := ""
 	code += _emit_uniforms(ir)
+	code += _emit_varyings(ir)
 	code += _emit_helpers(ir)
 
 	var vertex_nodes: Array = ir["vertex_nodes"]
@@ -168,6 +184,7 @@ func _emit_canvas_item(ir: Dictionary) -> String:
 func _emit_particles(ir: Dictionary) -> String:
 	var code := ""
 	code += _emit_uniforms(ir)
+	code += _emit_varyings(ir)
 	code += _emit_helpers(ir)
 
 	var vertex_nodes: Array = ir["vertex_nodes"]
@@ -189,6 +206,7 @@ func _emit_particles(ir: Dictionary) -> String:
 func _emit_sky(ir: Dictionary) -> String:
 	var code := ""
 	code += _emit_uniforms(ir)
+	code += _emit_varyings(ir)
 	code += _emit_helpers(ir)
 
 	code += "void sky() {\n"
@@ -205,6 +223,7 @@ func _emit_sky(ir: Dictionary) -> String:
 func _emit_fog(ir: Dictionary) -> String:
 	var code := ""
 	code += _emit_uniforms(ir)
+	code += _emit_varyings(ir)
 	code += _emit_helpers(ir)
 
 	code += "void fog() {\n"

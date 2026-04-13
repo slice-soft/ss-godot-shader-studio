@@ -64,6 +64,40 @@ func _port_type(ports: Array, port_id: String) -> int:
 	return SGSTypes.ShaderType.VOID
 
 
+func _domain_flag(domain: String) -> int:
+	match domain:
+		"spatial":
+			return SGSTypes.DOMAIN_SPATIAL
+		"canvas_item":
+			return SGSTypes.DOMAIN_CANVAS_ITEM
+		"particles":
+			return SGSTypes.DOMAIN_PARTICLES
+		"sky":
+			return SGSTypes.DOMAIN_SKY
+		"fog":
+			return SGSTypes.DOMAIN_FOG
+		"fullscreen":
+			return SGSTypes.DOMAIN_FULLSCREEN
+		"subgraph":
+			return SGSTypes.DOMAIN_ALL
+		_:
+			return 0
+
+
+func _resolved_stage(node: ShaderGraphNodeInstance, def: ShaderNodeDefinition) -> String:
+	if node.stage_scope == "vertex":
+		return "vertex"
+	if node.stage_scope == "fragment":
+		return "fragment"
+	if def.stage_support == SGSTypes.STAGE_VERTEX:
+		return "vertex"
+	return "fragment"
+
+
+func _supports_stage_varyings(domain: String) -> bool:
+	return domain == "spatial" or domain == "canvas_item" or domain == "fullscreen"
+
+
 # ---- Pass 1: Structural ----
 
 func _pass_structural(doc: ShaderGraphDocument, registry: NodeRegistry, issues: Array) -> void:
@@ -213,17 +247,48 @@ func _pass_typing(doc: ShaderGraphDocument, registry: NodeRegistry, issues: Arra
 # ---- Pass 3: Stage ----
 
 func _pass_stage(doc: ShaderGraphDocument, registry: NodeRegistry, issues: Array) -> void:
+	var domain := doc.get_shader_domain()
+	var domain_flag := _domain_flag(domain)
+	var stage_by_node: Dictionary = {}
+
 	for n in doc.get_all_nodes():
 		var node := n as ShaderGraphNodeInstance
 		var def := registry.get_definition(node.definition_id)
 		if def == null:
 			continue
+		if domain != "subgraph" and domain_flag != 0 and not def.supports_domain(domain_flag):
+			issues.append(_issue(2, node.id, "",
+				"Node '%s' is not available in '%s' shaders" % [node.definition_id, domain], "E013"))
 		if node.stage_scope == "vertex" and not def.supports_stage(SGSTypes.STAGE_VERTEX):
 			issues.append(_issue(2, node.id, "",
 				"Node '%s' does not support vertex stage" % node.definition_id, "E011"))
 		elif node.stage_scope == "fragment" and not def.supports_stage(SGSTypes.STAGE_FRAGMENT):
 			issues.append(_issue(2, node.id, "",
 				"Node '%s' does not support fragment stage" % node.definition_id, "E012"))
+		stage_by_node[node.id] = _resolved_stage(node, def)
+
+	for entry in doc.get_all_edges():
+		var edge := entry as ShaderGraphEdge
+		if edge == null:
+			continue
+		var from_node := doc.get_node(edge.from_node_id)
+		var to_node := doc.get_node(edge.to_node_id)
+		if from_node == null or to_node == null:
+			continue
+		var from_def := registry.get_definition(from_node.definition_id)
+		var to_def := registry.get_definition(to_node.definition_id)
+		if from_def == null or to_def == null:
+			continue
+		var from_stage := stage_by_node.get(from_node.id, _resolved_stage(from_node, from_def))
+		var to_stage := stage_by_node.get(to_node.id, _resolved_stage(to_node, to_def))
+		if from_stage == to_stage:
+			continue
+		if from_stage == "fragment" and to_stage == "vertex":
+			issues.append(_issue(2, to_node.id, edge.to_port_id,
+				"Fragment-stage data cannot feed vertex-stage input '%s'." % edge.to_port_id, "E014"))
+		elif from_stage == "vertex" and to_stage == "fragment" and not _supports_stage_varyings(domain):
+			issues.append(_issue(2, to_node.id, edge.to_port_id,
+				"Domain '%s' does not support automatic vertex-to-fragment varying transfer." % domain, "E015"))
 
 
 # ---- Pass 4: Cycle detection (DFS) ----

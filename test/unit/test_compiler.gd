@@ -83,6 +83,21 @@ func test_spatial_has_vertex_function_when_vertex_offset_present() -> void:
 	assert_contains(result["shader_code"], "void vertex()")
 
 
+func test_spatial_vertex_to_fragment_connection_emits_varying() -> void:
+	var doc := ShaderGraphDocument.new()
+	doc.set_name("Varying")
+	doc.set_shader_domain("spatial")
+	var world_pos_id := doc.add_node("input/world_position", Vector2.ZERO)
+	var out_id := doc.add_node("output/spatial", Vector2(220, 0))
+	doc.add_edge(world_pos_id, "pos", out_id, "albedo")
+	var result := compiler.compile_gd(doc)
+
+	assert_true(result["success"])
+	assert_contains(result["shader_code"], "varying vec3 _v0;")
+	assert_contains(result["shader_code"], "_v0 = _t0;")
+	assert_contains(result["shader_code"], "ALBEDO = _v0;")
+
+
 func test_spatial_add_multiply_contains_operations() -> void:
 	var doc := ShaderGraphDocument.new()
 	doc.set_name("Test")
@@ -234,6 +249,19 @@ func test_missing_output_node_fails() -> void:
 	# No output node → validation should fail
 	var result := compiler.compile_gd(doc)
 	assert_false(result["success"])
+
+
+func test_fragment_to_vertex_connection_fails_validation() -> void:
+	var doc := ShaderGraphDocument.new()
+	doc.set_name("BadStages")
+	doc.set_shader_domain("spatial")
+	var view_id := doc.add_node("input/view_direction", Vector2.ZERO)
+	var vert_id := doc.add_node("output/vertex_offset", Vector2(220, 0))
+	doc.add_node("output/spatial", Vector2(440, 0))
+	doc.add_edge(view_id, "dir", vert_id, "offset")
+	var result := compiler.compile_gd(doc)
+	assert_false(result["success"])
+	assert_true(_has_code(result["issues"], "E014"))
 
 
 # ---- Uniforms ----
