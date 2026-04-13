@@ -33,7 +33,7 @@ Cuando este documento contradice docs previas del repositorio, debe prevalecer e
   - importar `.gshadergraph` y `.gssubgraph` como recursos editables por el plugin
   - soportar nodos utilitarios como `custom_function`, `reroute` y `subgraph`
 - Limitaciones principales:
-  - no hay GDExtension ni backend C++ en el arbol actual, aunque `plugin.cfg` todavia lo afirma
+  - no hay backend C++ ni toolchain nativo requerido
   - `domain_support`, `properties_schema`, `stage_config`, `parameters`, `subgraph_refs`, `preview_enabled` y `varyings` existen parcial o totalmente sin integracion completa
   - no hay validacion de cruces vertex -> fragment con varyings reales
   - no hay filtrado de nodos por dominio en la UI
@@ -89,8 +89,7 @@ No es un wrapper sobre `VisualShader`. Confirmado por `README.md` y por la imple
 - Editor-time: muy alto. Todo el authoring ocurre como plugin de editor.
 - Runtime: indirecto. El runtime real consume el `.generated.gdshader`; el plugin no es necesario para ejecutar el shader ya generado. Confirmado.
 - Base tecnica actual: GDScript puro. Confirmado.
-- Dependencia de GDExtension: no en el arbol actual. Confirmado.
-- Vestigios de capa nativa previa o planeada: si. `.gitmodules` aun referencia `native/thirdparty/godot-cpp`, pero `native/` no existe en este checkout. Confirmado.
+- Dependencia de librerias nativas externas: ninguna. Confirmado.
 
 ## 3. Inventario completo del addon
 
@@ -293,7 +292,6 @@ Listado completo por categoria:
 ### Problemas u areas confusas
 
 - `stdlib_registration.gd` concentra demasiada superficie en un solo archivo. Confirmado.
-- `.gitmodules` apunta a `native/thirdparty/godot-cpp`, pero `native/` no existe. Confirmado.
 - `plugin.cfg`, `CHANGELOG`, manifest de release y `ShaderGraphCompiler.COMPILER_VERSION` no comparten la misma version. Confirmado.
 - La documentacion en `docs/` no siempre refleja la implementacion real. Confirmado.
 - El zip local en `dist/` esta versionado como `v0.0.0-local`, distinto del manifiesto `0.6.0`. Confirmado.
@@ -303,7 +301,7 @@ Listado completo por categoria:
 ### Requisitos previos
 
 - Godot 4.5 estable. Confirmado por `project.godot` y CI.
-- No se requiere toolchain C++ ni GDExtension en el arbol actual. Confirmado.
+- No se requieren dependencias externas ni toolchain nativo. Confirmado.
 - No hay dependencias runtime externas para consumir el shader ya generado. Confirmado.
 
 ### Versiones compatibles de Godot
@@ -331,7 +329,6 @@ Listado completo por categoria:
 2. Exponer solo `addons/ss_godot_shader_studio/` en la ruta esperada por Godot.
 3. Habilitar el plugin desde Project Settings.
 
-Observacion: el repo contiene `.gitmodules` hacia un path `native/thirdparty/godot-cpp`, pero ese path no existe en el checkout actual. Para la instalacion actual no parece necesario. Confirmado.
 
 ### Instalacion desde zip
 
@@ -1042,7 +1039,6 @@ EditorPlugin._exit_tree()
 
 ### 12.5 Falsas expectativas probables
 
-- "Hay backend C++/GDExtension": falso en este arbol actual.
 - "La docs de graph format refleja exactamente el serializer": falso.
 - "Los nodos se filtran segun dominio": falso.
 - "La opcion `PreviewMode` esta accesible en UI": falso.
@@ -1250,7 +1246,6 @@ Debilidad confirmada:
 | Modos `R/G/B/Alpha/UV` no tienen UI | `set_preview_mode()` nunca se llama | feature escondida/inaccesible | Confirmado |
 | No hay ejemplos `.gssubgraph` | busqueda de archivos vacia | curva de adopcion mayor | Confirmado |
 | No hay tests de import plugins ni del ciclo completo de `EditorPlugin` | suite actual | regresiones de integracion aun posibles fuera de panel/canvas/preview | Confirmado |
-| `.gitmodules` conserva `godot-cpp` pero no existe `native/` | inspeccion de repo | deuda historica/documental | Confirmado |
 | `README.md` refiere `LICENSE`, pero no existe en este checkout | archivo faltante | problema de distribucion/legalidad documental | Confirmado |
 | Preview de `particles` podria no ser representativo | el codigo lo trata como material 2D sobre `ColorRect` | requiere validacion manual | Pendiente de validacion |
 
