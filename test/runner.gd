@@ -72,6 +72,7 @@ func _collect_suites() -> Dictionary:
 	var suite_paths := [
 		"res://test/unit/test_type_system.gd",
 		"res://test/unit/test_graph_document.gd",
+		"res://test/unit/test_node_registry.gd",
 		"res://test/unit/test_validation_engine.gd",
 		"res://test/unit/test_ir_builder.gd",
 		"res://test/unit/test_compiler.gd",
