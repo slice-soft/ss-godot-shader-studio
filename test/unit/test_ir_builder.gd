@@ -68,6 +68,26 @@ func test_vertex_offset_goes_to_vertex_stage() -> void:
 	assert_eq((ir["vertex_nodes"][0] as Dictionary)["definition_id"], "output/vertex_offset")
 
 
+func test_vertex_to_fragment_edge_creates_varying() -> void:
+	var doc := ShaderGraphDocument.new()
+	doc.set_shader_domain("spatial")
+	var world_pos_id := doc.add_node("input/world_position", Vector2.ZERO)
+	var out_id := doc.add_node("output/spatial", Vector2(240, 0))
+	doc.add_edge(world_pos_id, "pos", out_id, "albedo")
+	var ir := IRBuilder.build(doc, registry)
+
+	assert_eq(ir["varyings"].size(), 1)
+	assert_eq(ir["vertex_nodes"].size(), 1)
+
+	var vertex_node: Dictionary = ir["vertex_nodes"][0]
+	var fragment_node: Dictionary = ir["fragment_nodes"].back()
+	var varying_name: String = (ir["varyings"][0] as Dictionary)["name"]
+	var albedo_var: String = (fragment_node["resolved_inputs"]["albedo"] as Dictionary)["var_name"]
+
+	assert_contains(vertex_node["post_lines"][0], varying_name)
+	assert_eq(albedo_var, varying_name)
+
+
 # ---- Variable naming ----
 
 func test_output_vars_assigned_to_fragment_nodes() -> void:

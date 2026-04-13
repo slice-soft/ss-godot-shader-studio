@@ -112,6 +112,28 @@ func test_wrong_stage_scope_is_error() -> void:
 	assert_true(_has_code(result["issues"], "E011"))
 
 
+func test_wrong_domain_node_is_error() -> void:
+	var doc := ShaderGraphDocument.new()
+	doc.set_shader_domain("canvas_item")
+	doc.add_node("output/canvas_item", Vector2.ZERO)
+	doc.add_node("effects/fresnel", Vector2(200, 0))
+	var result := engine.validate(doc, registry)
+	assert_false(result["success"])
+	assert_true(_has_code(result["issues"], "E013"))
+
+
+func test_fragment_to_vertex_connection_is_error() -> void:
+	var doc := ShaderGraphDocument.new()
+	doc.set_shader_domain("spatial")
+	var view_id := doc.add_node("input/view_direction", Vector2.ZERO)
+	var vert_id := doc.add_node("output/vertex_offset", Vector2(200, 0))
+	doc.add_node("output/spatial", Vector2(420, 0))
+	doc.add_edge(view_id, "dir", vert_id, "offset")
+	var result := engine.validate(doc, registry)
+	assert_false(result["success"])
+	assert_true(_has_code(result["issues"], "E014"))
+
+
 # ---- Pass 4: Cycle detection ----
 
 func test_cycle_is_error() -> void:
