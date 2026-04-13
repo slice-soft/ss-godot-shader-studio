@@ -20,7 +20,11 @@ grow_vertical = 2
 
 [node name="LineEdit" type="LineEdit" parent="VBoxContainer"]
 layout_mode = 2
+placeholder_text = "Search nodes..."
 
-[node name="ItemList" type="ItemList" parent="VBoxContainer"]
+[node name="Tree" type="Tree" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+hide_root = true
+select_mode = 0
+columns = 1
