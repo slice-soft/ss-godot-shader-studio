@@ -36,3 +36,8 @@ Thumbs.db
 # Release artifacts
 dist/
 *.zip
+
+*.md
+!README.md
+!docs/
+!docs/**/*.md

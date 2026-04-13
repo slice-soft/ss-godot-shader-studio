@@ -1,0 +1,363 @@
+{
+	"format_version": 1,
+	"uuid": "",
+	"name": "Fullscreen Posterized Glitch",
+	"shader_domain": "fullscreen",
+	"stage_config": {
+		"has_vertex": true,
+		"has_fragment": true,
+		"has_light": false
+	},
+	"nodes": [
+		{
+			"id": "node_1",
+			"definition_id": "parameter/float",
+			"title": "Hue Shift",
+			"position": {
+				"x": 60.0,
+				"y": 70.0
+			},
+			"properties": {
+				"param_name": "hue_amount",
+				"default_value": "0.08"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_2",
+			"definition_id": "parameter/float",
+			"title": "Contrast",
+			"position": {
+				"x": 60.0,
+				"y": 180.0
+			},
+			"properties": {
+				"param_name": "contrast_amount",
+				"default_value": "1.4"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_3",
+			"definition_id": "parameter/float",
+			"title": "Posterize Steps",
+			"position": {
+				"x": 60.0,
+				"y": 290.0
+			},
+			"properties": {
+				"param_name": "posterize_steps",
+				"default_value": "5.0"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_4",
+			"definition_id": "parameter/float",
+			"title": "Palette Hue",
+			"position": {
+				"x": 60.0,
+				"y": 540.0
+			},
+			"properties": {
+				"param_name": "palette_hue",
+				"default_value": "0.92"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_5",
+			"definition_id": "parameter/float",
+			"title": "Palette Saturation",
+			"position": {
+				"x": 60.0,
+				"y": 650.0
+			},
+			"properties": {
+				"param_name": "palette_saturation",
+				"default_value": "0.95"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_6",
+			"definition_id": "parameter/float",
+			"title": "Palette Value",
+			"position": {
+				"x": 60.0,
+				"y": 760.0
+			},
+			"properties": {
+				"param_name": "palette_value",
+				"default_value": "0.85"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_7",
+			"definition_id": "input/screen_texture",
+			"title": "Screen Texture",
+			"position": {
+				"x": 320.0,
+				"y": 70.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_8",
+			"definition_id": "image/hue_shift",
+			"title": "Hue Shift",
+			"position": {
+				"x": 600.0,
+				"y": 70.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_9",
+			"definition_id": "image/simple_contrast",
+			"title": "Simple Contrast",
+			"position": {
+				"x": 860.0,
+				"y": 70.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_10",
+			"definition_id": "image/posterize",
+			"title": "Posterize",
+			"position": {
+				"x": 1130.0,
+				"y": 70.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_11",
+			"definition_id": "image/grayscale",
+			"title": "Grayscale",
+			"position": {
+				"x": 610.0,
+				"y": 300.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_12",
+			"definition_id": "input/frag_coord",
+			"title": "Fragment Coordinate",
+			"position": {
+				"x": 330.0,
+				"y": 420.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_13",
+			"definition_id": "effects/dither",
+			"title": "Dither",
+			"position": {
+				"x": 900.0,
+				"y": 350.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_14",
+			"definition_id": "utility/subgraph",
+			"title": "Extreme Palette",
+			"position": {
+				"x": 620.0,
+				"y": 620.0
+			},
+			"properties": {
+				"subgraph_path": "res://shader_assets/subgraphs/extreme_palette.gssubgraph"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_15",
+			"definition_id": "vector/lerp",
+			"title": "Lerp Vector",
+			"position": {
+				"x": 1180.0,
+				"y": 280.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_16",
+			"definition_id": "output/fullscreen",
+			"title": "Fullscreen Output",
+			"position": {
+				"x": 1450.0,
+				"y": 260.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		}
+	],
+	"edges": [
+		{
+			"id": "edge_1",
+			"from_node_id": "node_7",
+			"from_port_id": "rgb",
+			"to_node_id": "node_8",
+			"to_port_id": "color"
+		},
+		{
+			"id": "edge_2",
+			"from_node_id": "node_1",
+			"from_port_id": "value",
+			"to_node_id": "node_8",
+			"to_port_id": "shift"
+		},
+		{
+			"id": "edge_3",
+			"from_node_id": "node_8",
+			"from_port_id": "result",
+			"to_node_id": "node_9",
+			"to_port_id": "color"
+		},
+		{
+			"id": "edge_4",
+			"from_node_id": "node_2",
+			"from_port_id": "value",
+			"to_node_id": "node_9",
+			"to_port_id": "contrast"
+		},
+		{
+			"id": "edge_5",
+			"from_node_id": "node_9",
+			"from_port_id": "result",
+			"to_node_id": "node_10",
+			"to_port_id": "color"
+		},
+		{
+			"id": "edge_6",
+			"from_node_id": "node_3",
+			"from_port_id": "value",
+			"to_node_id": "node_10",
+			"to_port_id": "steps"
+		},
+		{
+			"id": "edge_7",
+			"from_node_id": "node_7",
+			"from_port_id": "rgb",
+			"to_node_id": "node_11",
+			"to_port_id": "color"
+		},
+		{
+			"id": "edge_8",
+			"from_node_id": "node_12",
+			"from_port_id": "pos",
+			"to_node_id": "node_13",
+			"to_port_id": "screen_pos"
+		},
+		{
+			"id": "edge_9",
+			"from_node_id": "node_11",
+			"from_port_id": "result",
+			"to_node_id": "node_13",
+			"to_port_id": "value"
+		},
+		{
+			"id": "edge_10",
+			"from_node_id": "node_4",
+			"from_port_id": "value",
+			"to_node_id": "node_14",
+			"to_port_id": "hue_in"
+		},
+		{
+			"id": "edge_11",
+			"from_node_id": "node_5",
+			"from_port_id": "value",
+			"to_node_id": "node_14",
+			"to_port_id": "sat_in"
+		},
+		{
+			"id": "edge_12",
+			"from_node_id": "node_6",
+			"from_port_id": "value",
+			"to_node_id": "node_14",
+			"to_port_id": "val_in"
+		},
+		{
+			"id": "edge_13",
+			"from_node_id": "node_10",
+			"from_port_id": "result",
+			"to_node_id": "node_15",
+			"to_port_id": "a"
+		},
+		{
+			"id": "edge_14",
+			"from_node_id": "node_14",
+			"from_port_id": "rgb_out",
+			"to_node_id": "node_15",
+			"to_port_id": "b"
+		},
+		{
+			"id": "edge_15",
+			"from_node_id": "node_13",
+			"from_port_id": "result",
+			"to_node_id": "node_15",
+			"to_port_id": "t"
+		},
+		{
+			"id": "edge_16",
+			"from_node_id": "node_15",
+			"from_port_id": "result",
+			"to_node_id": "node_16",
+			"to_port_id": "color"
+		}
+	],
+	"frames": [],
+	"parameters": [],
+	"subgraph_refs": [],
+	"editor_state": {
+		"generated_shader_dir": "res://assets/shaders/examples"
+	}
+}

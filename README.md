@@ -51,6 +51,7 @@ All core logic is written in GDScript. No C++, no GDExtension, and no native bui
 - [Compiler pipeline](docs/compiler/pipeline.md)
 - [Graph format specification](docs/graph-format/gshadergraph-spec.md)
 - [Node definition specification](docs/node-authoring/node-definition-spec.md)
+- [Extreme validation examples](docs/examples/extreme-validation.md)
 - [Roadmap](ROADMAP.md)
 
 ## Development

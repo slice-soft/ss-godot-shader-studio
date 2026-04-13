@@ -76,6 +76,7 @@ func _collect_suites() -> Dictionary:
 		"res://test/unit/test_validation_engine.gd",
 		"res://test/unit/test_ir_builder.gd",
 		"res://test/unit/test_compiler.gd",
+		"res://test/unit/test_example_graphs.gd",
 		"res://test/unit/test_subgraph_contracts.gd",
 		"res://test/unit/test_shader_graph_path_utils.gd",
 		"res://test/integration/test_shader_editor_panel_integration.gd",

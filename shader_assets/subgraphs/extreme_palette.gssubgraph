@@ -1,0 +1,148 @@
+{
+	"format_version": 1,
+	"uuid": "",
+	"name": "Extreme Palette",
+	"shader_domain": "subgraph",
+	"stage_config": {
+		"has_vertex": true,
+		"has_fragment": true,
+		"has_light": false
+	},
+	"nodes": [
+		{
+			"id": "node_1",
+			"definition_id": "subgraph/input",
+			"title": "Hue",
+			"position": {
+				"x": 40.0,
+				"y": 40.0
+			},
+			"properties": {
+				"input_name": "Hue",
+				"input_type": "float",
+				"port_id": "hue_in"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_2",
+			"definition_id": "subgraph/input",
+			"title": "Saturation",
+			"position": {
+				"x": 40.0,
+				"y": 150.0
+			},
+			"properties": {
+				"input_name": "Saturation",
+				"input_type": "float",
+				"port_id": "sat_in"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_3",
+			"definition_id": "subgraph/input",
+			"title": "Value",
+			"position": {
+				"x": 40.0,
+				"y": 260.0
+			},
+			"properties": {
+				"input_name": "Value",
+				"input_type": "float",
+				"port_id": "val_in"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_4",
+			"definition_id": "swizzle/append_vec3",
+			"title": "Append Vec3",
+			"position": {
+				"x": 320.0,
+				"y": 150.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_5",
+			"definition_id": "color/hsv_to_rgb",
+			"title": "HSV to RGB",
+			"position": {
+				"x": 600.0,
+				"y": 150.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_6",
+			"definition_id": "subgraph/output",
+			"title": "RGB",
+			"position": {
+				"x": 880.0,
+				"y": 170.0
+			},
+			"properties": {
+				"output_name": "RGB",
+				"output_type": "vec3",
+				"port_id": "rgb_out"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		}
+	],
+	"edges": [
+		{
+			"id": "edge_1",
+			"from_node_id": "node_1",
+			"from_port_id": "value",
+			"to_node_id": "node_4",
+			"to_port_id": "x"
+		},
+		{
+			"id": "edge_2",
+			"from_node_id": "node_2",
+			"from_port_id": "value",
+			"to_node_id": "node_4",
+			"to_port_id": "y"
+		},
+		{
+			"id": "edge_3",
+			"from_node_id": "node_3",
+			"from_port_id": "value",
+			"to_node_id": "node_4",
+			"to_port_id": "z"
+		},
+		{
+			"id": "edge_4",
+			"from_node_id": "node_4",
+			"from_port_id": "result",
+			"to_node_id": "node_5",
+			"to_port_id": "hsv"
+		},
+		{
+			"id": "edge_5",
+			"from_node_id": "node_5",
+			"from_port_id": "rgb",
+			"to_node_id": "node_6",
+			"to_port_id": "value"
+		}
+	],
+	"frames": [],
+	"parameters": [],
+	"subgraph_refs": [],
+	"editor_state": {
+
+	}
+}

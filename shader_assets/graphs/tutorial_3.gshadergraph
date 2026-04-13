@@ -1,0 +1,301 @@
+{
+	"format_version": 1,
+	"uuid": "",
+	"name": "tutorial_3",
+	"shader_domain": "spatial",
+	"stage_config": {
+		"has_vertex": true,
+		"has_fragment": true,
+		"has_light": false
+	},
+	"nodes": [
+		{
+			"id": "node_1",
+			"definition_id": "output/spatial",
+			"title": "Spatial Output",
+			"position": {
+				"x": 1520.0,
+				"y": -40.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_3",
+			"definition_id": "parameter/float",
+			"title": "Float Parameter",
+			"position": {
+				"x": 640.0,
+				"y": -320.0
+			},
+			"properties": {
+				"param_name": "roughness_amount",
+				"default_value": "1.0"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_4",
+			"definition_id": "parameter/float",
+			"title": "Float Parameter",
+			"position": {
+				"x": -760.0,
+				"y": 780.0
+			},
+			"properties": {
+				"param_name": "rim_power",
+				"default_value": "-1.0",
+				"param_min": "-1.0",
+				"param_max": "2.0",
+				"param_step": "0.01"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_5",
+			"definition_id": "parameter/float",
+			"title": "Float Parameter",
+			"position": {
+				"x": -1000.0,
+				"y": 280.0
+			},
+			"properties": {
+				"param_name": "blend_sharpness",
+				"default_value": "1.0"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_6",
+			"definition_id": "parameter/color",
+			"title": "Color Parameter",
+			"position": {
+				"x": -920.0,
+				"y": 1160.0
+			},
+			"properties": {
+				"param_name": "rim_color",
+				"default_value": "vec4(0.5961, 1.0000, 0.0784, 1.0000)"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_7",
+			"definition_id": "input/world_position",
+			"title": "World Position",
+			"position": {
+				"x": -320.0,
+				"y": -100.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_8",
+			"definition_id": "surface/world_normal",
+			"title": "World Normal",
+			"position": {
+				"x": -880.0,
+				"y": 80.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_9",
+			"definition_id": "effects/triplanar",
+			"title": "Triplanar",
+			"position": {
+				"x": 180.0,
+				"y": -200.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_11",
+			"definition_id": "effects/fresnel",
+			"title": "Fresnel",
+			"position": {
+				"x": 200.0,
+				"y": 180.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_12",
+			"definition_id": "color/color_to_vec3",
+			"title": "Color to Vec3",
+			"position": {
+				"x": -160.0,
+				"y": 1260.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_13",
+			"definition_id": "vector/lerp",
+			"title": "Lerp Vector",
+			"position": {
+				"x": 860.0,
+				"y": 360.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_14",
+			"definition_id": "parameter/texture2d",
+			"title": "Texture2D Parameter",
+			"position": {
+				"x": -360.0,
+				"y": -340.0
+			},
+			"properties": {
+				"param_name": "albedo_tex"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_15",
+			"definition_id": "input/view_direction",
+			"title": "View Direction",
+			"position": {
+				"x": -840.0,
+				"y": 620.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		}
+	],
+	"edges": [
+		{
+			"id": "edge_1",
+			"from_node_id": "node_14",
+			"from_port_id": "value",
+			"to_node_id": "node_9",
+			"to_port_id": "tex"
+		},
+		{
+			"id": "edge_2",
+			"from_node_id": "node_5",
+			"from_port_id": "value",
+			"to_node_id": "node_9",
+			"to_port_id": "blend"
+		},
+		{
+			"id": "edge_3",
+			"from_node_id": "node_7",
+			"from_port_id": "pos",
+			"to_node_id": "node_9",
+			"to_port_id": "world_pos"
+		},
+		{
+			"id": "edge_4",
+			"from_node_id": "node_8",
+			"from_port_id": "normal",
+			"to_node_id": "node_9",
+			"to_port_id": "normal"
+		},
+		{
+			"id": "edge_6",
+			"from_node_id": "node_9",
+			"from_port_id": "rgb",
+			"to_node_id": "node_1",
+			"to_port_id": "albedo"
+		},
+		{
+			"id": "edge_7",
+			"from_node_id": "node_3",
+			"from_port_id": "value",
+			"to_node_id": "node_1",
+			"to_port_id": "roughness"
+		},
+		{
+			"id": "edge_9",
+			"from_node_id": "node_8",
+			"from_port_id": "normal",
+			"to_node_id": "node_11",
+			"to_port_id": "normal"
+		},
+		{
+			"id": "edge_10",
+			"from_node_id": "node_4",
+			"from_port_id": "value",
+			"to_node_id": "node_11",
+			"to_port_id": "power"
+		},
+		{
+			"id": "edge_11",
+			"from_node_id": "node_6",
+			"from_port_id": "value",
+			"to_node_id": "node_12",
+			"to_port_id": "color"
+		},
+		{
+			"id": "edge_12",
+			"from_node_id": "node_12",
+			"from_port_id": "rgb",
+			"to_node_id": "node_13",
+			"to_port_id": "b"
+		},
+		{
+			"id": "edge_13",
+			"from_node_id": "node_11",
+			"from_port_id": "result",
+			"to_node_id": "node_13",
+			"to_port_id": "t"
+		},
+		{
+			"id": "edge_14",
+			"from_node_id": "node_13",
+			"from_port_id": "result",
+			"to_node_id": "node_1",
+			"to_port_id": "emission"
+		},
+		{
+			"id": "edge_15",
+			"from_node_id": "node_15",
+			"from_port_id": "dir",
+			"to_node_id": "node_11",
+			"to_port_id": "view"
+		}
+	],
+	"frames": [],
+	"parameters": [],
+	"subgraph_refs": [],
+	"editor_state": {
+		"generated_shader_dir": "res://assets/shaders/generated"
+	}
+}
