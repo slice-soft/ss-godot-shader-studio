@@ -20,20 +20,38 @@ var _mode: PreviewMode = PreviewMode.FULL
 # Cached shader code for mode switching
 var _last_shader_code: String = ""
 
+# Orbit camera state
+var _dragging: bool        = false
+var _last_mouse: Vector2   = Vector2.ZERO
+var _orbit_az: float       = 0.0
+var _orbit_el: float       = deg_to_rad(15.0)
+var _orbit_dist: float     = 2.5
+const _ORBIT_SPEED: float  = 0.007
+const _ZOOM_SPEED: float   = 0.25
+const _MIN_DIST: float     = 0.4
+const _MAX_DIST: float     = 8.0
+
+# Preview mesh type
+enum PreviewMeshType { CAPSULE, SPHERE, BOX, PLANE, TORUS, CYLINDER }
+var _mesh_type: PreviewMeshType = PreviewMeshType.CAPSULE
+
+# Toolbar buttons
+var _toolbar: HBoxContainer = null
+
 
 func _ready() -> void:
 	stretch = true
-	_camera.position = Vector3(0.0, 0.0, 2.5)
-	_camera.look_at(Vector3.ZERO, Vector3.UP)
 	_light.position = Vector3(1.0, 2.0, 1.0)
 	_light.look_at(Vector3.ZERO, Vector3.UP)
 	_light.light_energy = 1.2
+	_update_camera()
 
 	# Build 2D preview using a SubViewportContainer (Control → has .visible)
 	_container_2d = SubViewportContainer.new()
 	_container_2d.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_container_2d.stretch = true
 	_container_2d.visible = false
+	_container_2d.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_container_2d)
 
 	_viewport_2d = SubViewport.new()
@@ -51,6 +69,70 @@ func _ready() -> void:
 	_color_rect = ColorRect.new()
 	_color_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_viewport_2d.add_child(_color_rect)
+
+	_build_toolbar()
+
+
+func _build_toolbar() -> void:
+	_toolbar = HBoxContainer.new()
+	_toolbar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_toolbar.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_toolbar.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_toolbar)
+
+	var dropdown := OptionButton.new()
+	dropdown.custom_minimum_size = Vector2(120, 32)
+	dropdown.add_theme_font_size_override("font_size", 14)
+	var meshes := ["Capsule", "Sphere", "Box", "Plane", "Torus", "Cylinder"]
+	for label in meshes:
+		dropdown.add_item(label)
+	dropdown.selected = 0
+	dropdown.item_selected.connect(func(idx: int) -> void: set_preview_mesh_type(idx as PreviewMeshType))
+	_toolbar.add_child(dropdown)
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		match event.button_index:
+			MOUSE_BUTTON_LEFT:
+				_dragging = event.pressed
+				_last_mouse = event.position
+				accept_event()
+			MOUSE_BUTTON_WHEEL_UP:
+				_orbit_dist = clamp(_orbit_dist - _ZOOM_SPEED, _MIN_DIST, _MAX_DIST)
+				_update_camera()
+				accept_event()
+			MOUSE_BUTTON_WHEEL_DOWN:
+				_orbit_dist = clamp(_orbit_dist + _ZOOM_SPEED, _MIN_DIST, _MAX_DIST)
+				_update_camera()
+				accept_event()
+	elif event is InputEventMouseMotion and _dragging:
+		var delta: Vector2 = event.position - _last_mouse
+		_last_mouse = event.position
+		_orbit_az  -= delta.x * _ORBIT_SPEED
+		_orbit_el  += delta.y * _ORBIT_SPEED
+		_orbit_el   = clamp(_orbit_el, deg_to_rad(-89.0), deg_to_rad(89.0))
+		_update_camera()
+		accept_event()
+
+
+func _update_camera() -> void:
+	var x := _orbit_dist * cos(_orbit_el) * sin(_orbit_az)
+	var y := _orbit_dist * sin(_orbit_el)
+	var z := _orbit_dist * cos(_orbit_el) * cos(_orbit_az)
+	_camera.position = Vector3(x, y, z)
+	_camera.look_at(Vector3.ZERO, Vector3.UP)
+
+
+func set_preview_mesh_type(type: PreviewMeshType) -> void:
+	_mesh_type = type
+	match type:
+		PreviewMeshType.CAPSULE:  _mesh.mesh = CapsuleMesh.new()
+		PreviewMeshType.SPHERE:   _mesh.mesh = SphereMesh.new()
+		PreviewMeshType.BOX:      _mesh.mesh = BoxMesh.new()
+		PreviewMeshType.PLANE:    _mesh.mesh = PlaneMesh.new()
+		PreviewMeshType.TORUS:    _mesh.mesh = TorusMesh.new()
+		PreviewMeshType.CYLINDER: _mesh.mesh = CylinderMesh.new()
 
 
 func apply_shader(shader_code: String) -> void:
