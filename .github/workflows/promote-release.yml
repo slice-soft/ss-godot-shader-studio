@@ -1,0 +1,16 @@
+name: Promote Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Confirm promotion from release to main"
+        required: true
+        type: boolean
+
+jobs:
+  promote:
+    uses: slice-soft/ss-pipeline/.github/workflows/promote-release.yml@v0
+    with:
+      confirm: ${{ inputs.confirm }}
+    secrets: inherit
