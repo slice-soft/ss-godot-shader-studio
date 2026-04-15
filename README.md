@@ -65,6 +65,13 @@ godot --headless --path . --script test/runner.gd
 
 > The first command regenerates `.godot/global_script_class_cache.cfg`. It is required after adding any new file that declares a `class_name`. Skip it and the runner will fail with `"Could not find type"` errors.
 
+## Release Flow
+
+- Feature work lands in `release` through squash merges.
+- Pushes to `release` create prereleases such as `ss_godot_shader_studio-v0.9.0-rc.1`.
+- After validation, run the `Promote Release` workflow to open the promotion PR from `release` to `main`.
+- Stable releases and downstream docs or landing updates only happen after the promotion merge into `main`.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

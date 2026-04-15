@@ -2,22 +2,23 @@ name: Release
 
 on:
   push:
-    branches: [main]
-
-permissions:
-  contents: write
-  pull-requests: write
+    branches:
+      - main
+      - release
 
 jobs:
   release:
     uses: slice-soft/ss-pipeline/.github/workflows/create-release.yml@v0
+    with:
+      release_strategy: rc
     secrets: inherit
 
-  release-addon:
+  release-addons:
     needs: release
     if: needs.release.outputs.releases_created == 'true'
     uses: slice-soft/ss-pipeline/.github/workflows/release-godot-addons.yml@v0
-    secrets: inherit
     with:
+      manifest-file: ${{ needs.release.outputs.release_channel == 'rc' && '.release-please-manifest.rc.json' || '.release-please-manifest.json' }}
       include-root-docs: |
         README.md
+    secrets: inherit
