@@ -2,18 +2,13 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, release]
 
 permissions:
   contents: read
   pull-requests: write
 
 jobs:
-  validate-pr:
-    if: github.event_name == 'pull_request'
-    uses: slice-soft/ss-pipeline/.github/workflows/validate-pr.yml@v0
-    secrets: inherit
-
   test:
     uses: slice-soft/ss-pipeline/.github/workflows/ci-godot.yml@v0
     with:

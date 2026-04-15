@@ -1,0 +1,11 @@
+name: Validate Release Source
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  release-source:
+    uses: slice-soft/ss-pipeline/.github/workflows/validate-release-source.yml@v0
+    secrets: inherit
