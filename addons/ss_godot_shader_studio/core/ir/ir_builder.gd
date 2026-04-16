@@ -206,7 +206,14 @@ static func build(doc: ShaderGraphDocument, registry: NodeRegistry) -> Dictionar
 		if def == null or def.outputs.is_empty():
 			continue
 		var port_type: int = def.outputs[0]["type"]
-		var glsl_hint := ": source_color" if node.definition_id == "parameter/color" else ""
+		var glsl_hint := ""
+		if node.definition_id == "parameter/color":
+			glsl_hint = ": source_color"
+		elif node.definition_id == "parameter/texture2d":
+			var tex_hint = node.get_property("texture_hint")
+			var tex_hint_str := str(tex_hint) if tex_hint != null else ""
+			if not tex_hint_str.is_empty():
+				glsl_hint = ": %s" % tex_hint_str
 		var dv: Variant = node.get_property("default_value")
 		ir["uniforms"].append({
 			"name":          param_name,
