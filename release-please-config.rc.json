@@ -6,6 +6,7 @@
       "component": "ss_godot_shader_studio",
       "changelog-path": "CHANGELOG.md",
       "pull-request-title-pattern": "chore(release): release ${version}",
+      "versioning": "prerelease",
       "prerelease": true,
       "prerelease-type": "rc"
     }
