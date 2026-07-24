@@ -5,6 +5,7 @@
       "release-type": "simple",
       "component": "ss_godot_shader_studio",
       "changelog-path": "CHANGELOG.md",
+      "extra-files": ["plugin.cfg"],
       "pull-request-title-pattern": "chore(main): release ${version}"
     }
   }
