@@ -1,0 +1,14 @@
+name: Validate Gitflow PR
+
+on:
+  pull_request:
+    branches:
+      - qa
+      - staging
+      - release
+      - main
+
+jobs:
+  gitflow:
+    uses: slice-soft/ss-pipeline/.github/workflows/validate-gitflow-pr.yml@v0
+    secrets: inherit
