@@ -1,0 +1,17 @@
+name: Validate Gitflow PR
+
+on:
+  pull_request:
+    # `edited` is required: editing the PR title does not fire the default
+    # types (opened/synchronize/reopened), so a title fix would never re-validate.
+    types: [opened, synchronize, reopened, edited]
+    branches:
+      - qa
+      - staging
+      - release
+      - main
+
+jobs:
+  gitflow:
+    uses: slice-soft/ss-pipeline/.github/workflows/validate-gitflow-pr.yml@v0
+    secrets: inherit

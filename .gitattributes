@@ -1,0 +1,5 @@
+# Changelogs are append-mostly: use the built-in `union` merge driver so a
+# promotion (release -> main) never conflicts on changelog content.
+# `union` is a git built-in and is honored by GitHub's server-side merge.
+CHANGELOG.md    merge=union
+CHANGELOG-rc.md merge=union
