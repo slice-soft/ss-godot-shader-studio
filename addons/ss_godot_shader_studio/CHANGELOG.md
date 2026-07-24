@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.0-rc](https://github.com/slice-soft/ss-godot-shader-studio/compare/ss_godot_shader_studio-v0.8.0...ss_godot_shader_studio-v0.9.0-rc) (2026-04-17)
+
+
+### Features
+
+* add controls to preview ([#13](https://github.com/slice-soft/ss-godot-shader-studio/issues/13)) ([98144dc](https://github.com/slice-soft/ss-godot-shader-studio/commit/98144dc86c04b6d67663b35908bace629c69c3a0))
+
 ## [0.9.0](https://github.com/slice-soft/ss-godot-shader-studio/compare/ss_godot_shader_studio-v0.8.0...ss_godot_shader_studio-v0.9.0) (2026-04-15)
 
 
