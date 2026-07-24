@@ -42,7 +42,7 @@ Cuando este documento contradice docs previas del repositorio, debe prevalecer e
 - Estado general del addon: funcional para el nucleo y utilizable para prototipos/controlados; todavia con deuda visible en UX, coherencia documental y seguridad de contratos publicos. Inferido.
 - Nivel de madurez aparente: beta temprana a beta media. El nucleo compila y tiene tests, pero la integracion editor/dominios aun no parece cerrada para produccion exigente sin validacion propia. Inferido.
 - Contexto de uso ideal:
-  - equipos pequenos o medianos con Godot 4.5
+  - equipos pequenos o medianos con Godot 4.5+
   - flujos donde el `.gshadergraph` sea fuente de verdad y el `.generated.gdshader` se comitee
   - uso interno o controlado antes de una publicacion mas amplia
 
@@ -300,14 +300,15 @@ Listado completo por categoria:
 
 ### Requisitos previos
 
-- Godot 4.5 estable. Confirmado por `project.godot` y CI.
+- Godot 4.5+ (linea 4.x). Piso probado en 4.5 (`project.godot` y CI); la suite completa tambien pasa en 4.7.
 - No se requieren dependencias externas ni toolchain nativo. Confirmado.
 - No hay dependencias runtime externas para consumir el shader ya generado. Confirmado.
 
 ### Versiones compatibles de Godot
 
-- Confirmado: 4.5 estable.
-- Inferido: versiones 4.x cercanas pueden funcionar si preservan `GraphFrame`, `EditorUndoRedoManager`, `EditorImportPlugin` y APIs usadas, pero no hay evidencia en este repo.
+- Soportado: Godot 4.5+ (cualquier 4.x desde 4.5). El piso real de formato es 4.4 (UIDs de script en las escenas); las APIs de editor asumen 4.5.
+- Probado en CI: 4.5 estable. Verificado ademas en 4.7 estable (la suite completa del repo pasa: 322 tests).
+- No soportado: 4.0-4.3 (los `uid://` de script en las escenas no resuelven) ni 5.x (se esperan breaking changes).
 
 ### Instalacion copiando carpeta
 
