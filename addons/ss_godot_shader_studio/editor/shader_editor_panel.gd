@@ -85,8 +85,8 @@ func setup_side_panels(node_inspector, params_panel) -> void:
 
 	if _node_inspector != null and not _node_inspector.property_edited.is_connected(_on_node_property_edited):
 		_node_inspector.property_edited.connect(_on_node_property_edited)
-	if _params_panel != null and not _params_panel.parameter_edited.is_connected(_on_parameter_edited):
-		_params_panel.parameter_edited.connect(_on_parameter_edited)
+	if _params_panel != null and not _params_panel.parameter_edited.is_connected(_on_panel_parameter_edited):
+		_params_panel.parameter_edited.connect(_on_panel_parameter_edited)
 	if _document != null:
 		_refresh_params()
 
@@ -105,7 +105,7 @@ func _ready() -> void:
 	_graph_canvas.node_selected_in_canvas.connect(_on_node_selected)
 	_graph_canvas.frame_selected_in_canvas.connect(_on_frame_selected)
 	_graph_canvas.graph_changed.connect(_on_graph_changed)
-	_graph_canvas.parameter_property_edited.connect(_on_parameter_edited)
+	_graph_canvas.parameter_property_edited.connect(_on_canvas_parameter_edited)
 	if _undo_redo != null:
 		_graph_canvas.setup_undo_redo(_undo_redo)
 
@@ -477,11 +477,28 @@ func _compile_document(show_output: bool, write_generated: bool) -> Dictionary:
 	if result.get("success", false):
 		var shader_code := result.get("shader_code", "")
 		_shader_preview.apply_shader(shader_code)
+		_shader_preview.apply_texture_uniforms(_collect_texture_uniforms())
 		if write_generated and not _current_path.is_empty():
 			_write_generated_shader_or_prompt(_current_path, shader_code)
 	else:
 		_shader_preview.apply_shader("")
 
+	return result
+
+
+func _collect_texture_uniforms() -> Dictionary:
+	if _document == null:
+		return {}
+	var result := {}
+	for n in _document.get_all_nodes():
+		var inst := n as ShaderGraphNodeInstance
+		if inst == null or inst.definition_id != "parameter/texture2d":
+			continue
+		var param_name = inst.get_property("param_name")
+		var tex_path   = inst.get_property("texture_path")
+		if param_name != null and str(param_name) != "" \
+				and tex_path != null and str(tex_path) != "":
+			result[str(param_name)] = str(tex_path)
 	return result
 
 
@@ -574,7 +591,20 @@ func _on_node_property_edited(node_instance: ShaderGraphNodeInstance, key: Strin
 	_refresh_document_state(true, true)
 
 
-func _on_parameter_edited(_node_instance: ShaderGraphNodeInstance, _key: String, _value: Variant) -> void:
+## Panel → canvas: panel already reflects the change, just sync the canvas widget.
+func _on_panel_parameter_edited(node_instance: ShaderGraphNodeInstance, key: String, _value: Variant) -> void:
+	if _graph_canvas == null:
+		return
+	_graph_canvas.refresh_node_widget(node_instance)
+	# use_slider changes restructure the widget slots — a second deferred pass is needed.
+	if key == "use_slider":
+		_graph_canvas.refresh_node_widget.call_deferred(node_instance)
+	_revalidate_document()
+	_schedule_preview_refresh()
+
+
+## Canvas → panel: canvas already reflects the change, just sync the panel.
+func _on_canvas_parameter_edited(_node_instance: ShaderGraphNodeInstance, _key: String, _value: Variant) -> void:
 	_refresh_document_state(false, true)
 
 

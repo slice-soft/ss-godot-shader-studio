@@ -1,0 +1,487 @@
+{
+	"format_version": 1,
+	"uuid": "",
+	"name": "test_sand_example",
+	"shader_domain": "spatial",
+	"stage_config": {
+		"has_vertex": true,
+		"has_fragment": true,
+		"has_light": false
+	},
+	"nodes": [
+		{
+			"id": "node_1",
+			"definition_id": "output/spatial",
+			"title": "Spatial Output",
+			"position": {
+				"x": 1780.0,
+				"y": 680.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_2",
+			"definition_id": "parameter/texture2d",
+			"title": "Texture2D Parameter",
+			"position": {
+				"x": 120.0,
+				"y": 300.0
+			},
+			"properties": {
+				"param_name": "tex_bottom",
+				"texture_path": "res://shaders/Poliigon_ConcreteFloorPoured_7656/2K/Poliigon_ConcreteFloorPoured_7656_BaseColor.jpg"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_3",
+			"definition_id": "parameter/texture2d",
+			"title": "Texture2D Parameter",
+			"position": {
+				"x": 120.0,
+				"y": 500.0
+			},
+			"properties": {
+				"param_name": "tex_mid",
+				"texture_path": "res://shaders/Poliigon_BrickWallReclaimed_8320/2K/Poliigon_BrickWallReclaimed_8320_BaseColor.jpg"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_4",
+			"definition_id": "parameter/texture2d",
+			"title": "Texture2D Parameter",
+			"position": {
+				"x": 120.0,
+				"y": 660.0
+			},
+			"properties": {
+				"param_name": "tex_top",
+				"texture_path": "res://shaders/Poliigon_GrassPatchyGround_4585/2K/Poliigon_GrassPatchyGround_4585_BaseColor.jpg"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_5",
+			"definition_id": "input/uv",
+			"title": "UV",
+			"position": {
+				"x": 380.0,
+				"y": 780.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_6",
+			"definition_id": "texture/sample_2d",
+			"title": "Sample Texture 2D",
+			"position": {
+				"x": 500.0,
+				"y": 300.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_7",
+			"definition_id": "texture/sample_2d",
+			"title": "Sample Texture 2D",
+			"position": {
+				"x": 500.0,
+				"y": 740.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_8",
+			"definition_id": "texture/sample_2d",
+			"title": "Sample Texture 2D",
+			"position": {
+				"x": 500.0,
+				"y": 520.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_9",
+			"definition_id": "input/uv",
+			"title": "UV",
+			"position": {
+				"x": 380.0,
+				"y": 580.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_10",
+			"definition_id": "input/uv",
+			"title": "UV",
+			"position": {
+				"x": 380.0,
+				"y": 400.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_11",
+			"definition_id": "surface/vertex_position_local",
+			"title": "Vertex Position (Local)",
+			"position": {
+				"x": 140.0,
+				"y": 940.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_12",
+			"definition_id": "object/scale",
+			"title": "Object Scale",
+			"position": {
+				"x": 180.0,
+				"y": 1120.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_13",
+			"definition_id": "math/multiply",
+			"title": "Multiply",
+			"position": {
+				"x": 420.0,
+				"y": 1080.0
+			},
+			"properties": {
+				"a": "1.0",
+				"b": "1.0"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_14",
+			"definition_id": "parameter/float",
+			"title": "Float Parameter",
+			"position": {
+				"x": 80.0,
+				"y": 1340.0
+			},
+			"properties": {
+				"param_name": "mid_start",
+				"default_value": "-0.58",
+				"param_min": "-1.0",
+				"param_max": "0",
+				"param_step": "0.01",
+				"use_slider": "false"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_15",
+			"definition_id": "parameter/float",
+			"title": "Float Parameter",
+			"position": {
+				"x": 60.0,
+				"y": 1540.0
+			},
+			"properties": {
+				"param_name": "mid_end",
+				"default_value": "0.0",
+				"use_slider": "false"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_16",
+			"definition_id": "parameter/float",
+			"title": "Float Parameter",
+			"position": {
+				"x": 40.0,
+				"y": 1960.0
+			},
+			"properties": {
+				"param_name": "top_start",
+				"default_value": "0.17",
+				"param_min": "0.0",
+				"param_max": "0.4",
+				"param_step": "0.01",
+				"use_slider": "true"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_17",
+			"definition_id": "parameter/float",
+			"title": "Float Parameter",
+			"position": {
+				"x": 60.0,
+				"y": 1740.0
+			},
+			"properties": {
+				"param_name": "top_end",
+				"default_value": "0.69",
+				"param_min": "0.180",
+				"param_max": "5.0",
+				"param_step": "0.01",
+				"use_slider": "true"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_18",
+			"definition_id": "float/smoothstep",
+			"title": "Smoothstep",
+			"position": {
+				"x": 640.0,
+				"y": 1340.0
+			},
+			"properties": {
+				"edge0": "0.0",
+				"edge1": "1.0",
+				"x": "0.5"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_19",
+			"definition_id": "float/smoothstep",
+			"title": "Smoothstep",
+			"position": {
+				"x": 640.0,
+				"y": 1540.0
+			},
+			"properties": {
+				"edge0": "0.0",
+				"edge1": "1.0",
+				"x": "0.5"
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_20",
+			"definition_id": "vector/lerp",
+			"title": "Lerp Vector",
+			"position": {
+				"x": 920.0,
+				"y": 520.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		},
+		{
+			"id": "node_21",
+			"definition_id": "vector/lerp",
+			"title": "Lerp Vector",
+			"position": {
+				"x": 1180.0,
+				"y": 840.0
+			},
+			"properties": {
+
+			},
+			"stage_scope": "any",
+			"preview_enabled": false
+		}
+	],
+	"edges": [
+		{
+			"id": "edge_1",
+			"from_node_id": "node_2",
+			"from_port_id": "value",
+			"to_node_id": "node_6",
+			"to_port_id": "tex"
+		},
+		{
+			"id": "edge_2",
+			"from_node_id": "node_10",
+			"from_port_id": "uv",
+			"to_node_id": "node_6",
+			"to_port_id": "uv"
+		},
+		{
+			"id": "edge_3",
+			"from_node_id": "node_3",
+			"from_port_id": "value",
+			"to_node_id": "node_8",
+			"to_port_id": "tex"
+		},
+		{
+			"id": "edge_4",
+			"from_node_id": "node_9",
+			"from_port_id": "uv",
+			"to_node_id": "node_8",
+			"to_port_id": "uv"
+		},
+		{
+			"id": "edge_5",
+			"from_node_id": "node_4",
+			"from_port_id": "value",
+			"to_node_id": "node_7",
+			"to_port_id": "tex"
+		},
+		{
+			"id": "edge_6",
+			"from_node_id": "node_5",
+			"from_port_id": "uv",
+			"to_node_id": "node_7",
+			"to_port_id": "uv"
+		},
+		{
+			"id": "edge_7",
+			"from_node_id": "node_11",
+			"from_port_id": "y",
+			"to_node_id": "node_13",
+			"to_port_id": "a"
+		},
+		{
+			"id": "edge_8",
+			"from_node_id": "node_12",
+			"from_port_id": "y",
+			"to_node_id": "node_13",
+			"to_port_id": "b"
+		},
+		{
+			"id": "edge_9",
+			"from_node_id": "node_14",
+			"from_port_id": "value",
+			"to_node_id": "node_18",
+			"to_port_id": "edge0"
+		},
+		{
+			"id": "edge_10",
+			"from_node_id": "node_15",
+			"from_port_id": "value",
+			"to_node_id": "node_18",
+			"to_port_id": "edge1"
+		},
+		{
+			"id": "edge_11",
+			"from_node_id": "node_13",
+			"from_port_id": "result",
+			"to_node_id": "node_18",
+			"to_port_id": "x"
+		},
+		{
+			"id": "edge_14",
+			"from_node_id": "node_17",
+			"from_port_id": "value",
+			"to_node_id": "node_19",
+			"to_port_id": "edge1"
+		},
+		{
+			"id": "edge_15",
+			"from_node_id": "node_16",
+			"from_port_id": "value",
+			"to_node_id": "node_19",
+			"to_port_id": "edge0"
+		},
+		{
+			"id": "edge_16",
+			"from_node_id": "node_13",
+			"from_port_id": "result",
+			"to_node_id": "node_19",
+			"to_port_id": "x"
+		},
+		{
+			"id": "edge_17",
+			"from_node_id": "node_6",
+			"from_port_id": "rgb",
+			"to_node_id": "node_20",
+			"to_port_id": "a"
+		},
+		{
+			"id": "edge_18",
+			"from_node_id": "node_8",
+			"from_port_id": "rgb",
+			"to_node_id": "node_20",
+			"to_port_id": "b"
+		},
+		{
+			"id": "edge_19",
+			"from_node_id": "node_18",
+			"from_port_id": "result",
+			"to_node_id": "node_20",
+			"to_port_id": "t"
+		},
+		{
+			"id": "edge_20",
+			"from_node_id": "node_20",
+			"from_port_id": "result",
+			"to_node_id": "node_21",
+			"to_port_id": "a"
+		},
+		{
+			"id": "edge_21",
+			"from_node_id": "node_7",
+			"from_port_id": "rgb",
+			"to_node_id": "node_21",
+			"to_port_id": "b"
+		},
+		{
+			"id": "edge_22",
+			"from_node_id": "node_19",
+			"from_port_id": "result",
+			"to_node_id": "node_21",
+			"to_port_id": "t"
+		},
+		{
+			"id": "edge_23",
+			"from_node_id": "node_21",
+			"from_port_id": "result",
+			"to_node_id": "node_1",
+			"to_port_id": "albedo"
+		}
+	],
+	"frames": [],
+	"parameters": [],
+	"subgraph_refs": [],
+	"editor_state": {
+		"generated_shader_dir": "res://assets/shaders/generated"
+	}
+}

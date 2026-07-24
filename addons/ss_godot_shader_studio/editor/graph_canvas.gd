@@ -181,6 +181,8 @@ func _create_node_widget(node_inst: ShaderGraphNodeInstance) -> void:
 	if node_inst.get_definition_id().begins_with("parameter/"):
 		widget.connect("node_property_changed", func(key: String, value: Variant) -> void:
 			parameter_property_edited.emit(node_inst, key, value)
+			if key == "use_slider":
+				refresh_node_widget.call_deferred(node_inst)
 		)
 
 

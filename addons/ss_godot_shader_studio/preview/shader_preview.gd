@@ -140,6 +140,19 @@ func apply_shader(shader_code: String) -> void:
 	_apply_with_mode(shader_code, _mode)
 
 
+func apply_texture_uniforms(textures: Dictionary) -> void:
+	var mat := _mesh.material_override
+	if mat == null or not mat is ShaderMaterial:
+		return
+	for param_name in textures:
+		var path := str(textures[param_name])
+		if path.is_empty():
+			continue
+		var tex = load(path)
+		if tex is Texture2D:
+			(mat as ShaderMaterial).set_shader_parameter(param_name, tex)
+
+
 func set_preview_mode(mode: PreviewMode) -> void:
 	_mode = mode
 	if not _last_shader_code.is_empty():

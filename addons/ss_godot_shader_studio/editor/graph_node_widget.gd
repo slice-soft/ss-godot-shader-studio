@@ -14,6 +14,7 @@ func setup(node_inst: ShaderGraphNodeInstance, port_info: Dictionary) -> void:
 	title = node_inst.get_title()
 
 	# Remove all existing children (the template VBoxContainer)
+	clear_all_slots()
 	for child in get_children():
 		remove_child(child)
 		child.free()
@@ -69,6 +70,7 @@ func setup(node_inst: ShaderGraphNodeInstance, port_info: Dictionary) -> void:
 		)
 
 
+
 # ---------------------------------------------------------------------------
 # Parameter node inline editor
 # ---------------------------------------------------------------------------
@@ -105,9 +107,9 @@ func _setup_parameter_node(node_inst: ShaderGraphNodeInstance) -> void:
 	# Value rows — type-specific.
 	match def_id:
 		"parameter/float":
-			_add_float_slider_rows("default_value", node_inst, 1, false)
+			_add_float_value_rows("default_value", node_inst, 1, false)
 		"parameter/int":
-			_add_float_slider_rows("default_value", node_inst, 1, true)
+			_add_float_value_rows("default_value", node_inst, 1, true)
 		"parameter/toggle":
 			_add_toggle_row("Value", "default_value", node_inst, 1)
 		"parameter/vec2":
@@ -118,7 +120,110 @@ func _setup_parameter_node(node_inst: ShaderGraphNodeInstance) -> void:
 			_add_vec_rows(["X", "Y", "Z", "W"], "default_value", node_inst, 1, 4, "vec4")
 		"parameter/color":
 			_add_color_row("default_value", node_inst, 1)
-		# parameter/texture2d and parameter/sampler_cube: no value rows
+		"parameter/texture2d":
+			_add_texture_rows(node_inst, 1)
+		# parameter/sampler_cube: no value rows
+
+
+# Wrapper: shows a slider or a plain spinbox depending on use_slider property.
+func _add_float_value_rows(key: String, node_inst: ShaderGraphNodeInstance,
+		slot_idx: int, is_int: bool) -> int:
+	var use_slider_prop = node_inst.get_property("use_slider")
+	var use_slider := use_slider_prop == null or str(use_slider_prop) != "false"
+
+	# Toggle row (always present)
+	var toggle_row := HBoxContainer.new()
+	toggle_row.size_flags_horizontal = Control.SIZE_FILL
+	var toggle_lbl := Label.new()
+	toggle_lbl.text = "Slider"
+	toggle_lbl.custom_minimum_size = Vector2(44, 0)
+	toggle_row.add_child(toggle_lbl)
+	var toggle_btn := CheckButton.new()
+	toggle_btn.button_pressed = use_slider
+	toggle_btn.toggled.connect(func(on: bool) -> void:
+		_emit_property("use_slider", "true" if on else "false")
+	)
+	toggle_row.add_child(toggle_btn)
+	add_child(toggle_row)
+	set_slot(slot_idx, false, 0, COLOR_INPUT, false, 0, COLOR_OUTPUT)
+
+	if use_slider:
+		return _add_float_slider_rows(key, node_inst, slot_idx + 1, is_int)
+
+	# Plain value row
+	var spb_row := HBoxContainer.new()
+	spb_row.size_flags_horizontal = Control.SIZE_FILL
+	var val_lbl := Label.new()
+	val_lbl.text = "Value"
+	val_lbl.custom_minimum_size = Vector2(44, 0)
+	spb_row.add_child(val_lbl)
+	var spb := SpinBox.new()
+	spb.min_value = -9999.0
+	spb.max_value = 9999.0
+	spb.step = 1.0 if is_int else 0.001
+	spb.allow_greater = true
+	spb.allow_lesser = true
+	var cur_val = node_inst.get_property(key)
+	spb.value = float(str(cur_val)) if cur_val != null else 0.0
+	spb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spb.value_changed.connect(func(v: float) -> void:
+		_emit_property(key, str(int(v)) if is_int else str(v))
+	)
+	spb_row.add_child(spb)
+	add_child(spb_row)
+	set_slot(slot_idx + 1, false, 0, COLOR_INPUT, false, 0, COLOR_OUTPUT)
+	return slot_idx + 2
+
+
+func _add_texture_rows(node_inst: ShaderGraphNodeInstance, slot_idx: int) -> int:
+	# Texture picker row
+	var pick_row := HBoxContainer.new()
+	pick_row.size_flags_horizontal = Control.SIZE_FILL
+	var pick_lbl := Label.new()
+	pick_lbl.text = "Tex"
+	pick_lbl.custom_minimum_size = Vector2(44, 0)
+	pick_row.add_child(pick_lbl)
+	var picker := EditorResourcePicker.new()
+	picker.base_type = "Texture2D"
+	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var cur_path = node_inst.get_property("texture_path")
+	if cur_path != null and str(cur_path) != "":
+		var tex = load(str(cur_path))
+		if tex is Texture2D:
+			picker.edited_resource = tex
+	picker.resource_changed.connect(func(res: Resource) -> void:
+		_emit_property("texture_path", res.resource_path if res != null else "")
+	)
+	pick_row.add_child(picker)
+	add_child(pick_row)
+	set_slot(slot_idx, false, 0, COLOR_INPUT, false, 0, COLOR_OUTPUT)
+
+	# Hint dropdown row
+	var hint_row := HBoxContainer.new()
+	hint_row.size_flags_horizontal = Control.SIZE_FILL
+	var hint_lbl := Label.new()
+	hint_lbl.text = "Hint"
+	hint_lbl.custom_minimum_size = Vector2(44, 0)
+	hint_row.add_child(hint_lbl)
+	var hint_opt := OptionButton.new()
+	hint_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	const _HINT_VALUES := ["", "hint_default_white", "hint_default_black",
+		"hint_normal", "hint_roughness_gray"]
+	const _HINT_LABELS := ["none", "default white", "default black",
+		"normal map", "roughness gray"]
+	for i in _HINT_VALUES.size():
+		hint_opt.add_item(_HINT_LABELS[i], i)
+	var cur_hint = node_inst.get_property("texture_hint")
+	var cur_hint_str := str(cur_hint) if cur_hint != null else ""
+	var hint_idx := _HINT_VALUES.find(cur_hint_str)
+	hint_opt.selected = hint_idx if hint_idx >= 0 else 0
+	hint_opt.item_selected.connect(func(idx: int) -> void:
+		_emit_property("texture_hint", _HINT_VALUES[idx])
+	)
+	hint_row.add_child(hint_opt)
+	add_child(hint_row)
+	set_slot(slot_idx + 1, false, 0, COLOR_INPUT, false, 0, COLOR_OUTPUT)
+	return slot_idx + 2
 
 
 func _add_float_slider_rows(key: String, node_inst: ShaderGraphNodeInstance,
